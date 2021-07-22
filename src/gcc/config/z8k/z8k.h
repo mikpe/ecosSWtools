@@ -1017,7 +1017,7 @@ extern int arg_regs[FIRST_PSEUDO_REGISTER];
 	(((c) == 'Q')  ? (IR_P(op) || DA_P(op)) :               \
         (((c) == 'R')  ? (X_P(op))  :                           \
         (((c) == 'T')  ? (BA_P(op))  :                          \
-        (((c) == 'S')  ? (BA_P(op) || BX_P(op)) : abort() ))))
+        (((c) == 'S')  ? (BA_P(op) || BX_P(op)) : 0 ))))
 
 /* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression
    that is a valid memory address for an instruction.
