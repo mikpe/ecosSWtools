@@ -945,7 +945,7 @@ extern int arg_regs[FIRST_PSEUDO_REGISTER];
 #define IS_STRICT 0
 /* Nonzero if X is a hard reg that can be used as an index
    or if it is a pseudo reg.  */
-#define REG_OK_FOR_INDEX_P(X) 
+#define REG_OK_FOR_INDEX_P(X) 1
 
 /* Nonzero if X is a hard reg that can be used as a base reg
    or if it is a pseudo reg.  */
