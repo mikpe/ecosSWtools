@@ -1,0 +1,160 @@
+## @configure_input@
+# Makefile for DejaGnu Testing Framework.
+# Copyright (C) 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+
+#This file is part of DejaGnu.
+
+#DejaGnu is free software; you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation; either version 2, or (at your option)
+#any later version.
+
+#DejaGnu is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with DejaGnu; see the file COPYING.  If not, write to
+#the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+VPATH = @srcdir@
+srcdir = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+libdir = @libdir@
+
+dejadatadir = @datadir@/dejagnu
+infodir = @infodir@
+includedir = @includedir@
+gxx_include_dir = $(tooldir)/g++-include
+
+SHELL = /bin/sh
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+CC = @CC@
+CFLAGS = -g
+
+SUBDIRS = @subdirs@
+
+# These let the DejaGnu test suite run when DejaGnu isn't 
+# installed yet, so run it from the srcdir and objdir.
+EXPECT = ` \
+  if [ -f $${rootme}/../expect/expect ] ; then \
+    echo $${rootme}/../expect/expect ; \
+  else echo expect ; fi`
+
+RUNTESTFLAGS =
+RUNTEST = ` \
+  if [ -f ${srcdir}/runtest ] ; then \
+    echo ${srcdir}/runtest ; \
+  else echo runtest ;  fi`
+
+TCLIBRARY = `if [ -f $${rootme}/expect/expect ] ; \
+	then echo TCL_LIBRARY=$${srcdir}/../tcl/library ; \
+	else echo "" ; fi`
+
+FLAGS_TO_PASS = \
+	"CC=$(CC)" \
+	"CFLAGS=$(CFLAGS)" \
+	"INSTALL=$(INSTALL)" \
+	"INSTALL_DATA=$(INSTALL_DATA)" \
+	"INSTALL_PROGRAM=$(INSTALL_PROGRAM)" \
+	"LDFLAGS=$(LDFLAGS)" \
+	"MAKEINFO=$(MAKEINFO)" \
+	"EXPECT=$(EXPECT)" \
+	"TCLIBRARY=$(TCLIBRARY)" \
+	"RUNTEST=$(RUNTEST)" \
+	"RUNTESTFLAGS=$(RUNTESTFLAGS)" \
+	"exec_prefix=$(exec_prefix)" \
+	"prefix=$(prefix)" \
+	"tooldir=$(tooldir)"
+
+all:	force
+	@$(MAKE) subdir_do DO=$@  $(FLAGS_TO_PASS)
+
+.PHONY: check installcheck
+installcheck:
+
+.NOEXPORT:
+
+MAKEOVERRIDES=
+
+INFODIRS=doc
+dvi info:
+	@rootme=`pwd`/ ; export rootme ; \
+	rootsrc=`cd $(srcdir); pwd`/ ; export rootsrc ; \
+	$(MAKE) subdir_do DO=$@ "DODIRS=$(INFODIRS)" $(FLAGS_TO_PASS)
+
+install-info:
+	@rootme=`pwd`/ ; export rootme ; \
+	$(MAKE) subdir_do DO=install-info $(FLAGS_TO_PASS)
+
+install:
+	${srcdir}/mkinstalldirs $(bindir) $(dejadatadir) $(dejadatadir)/baseboards $(dejadatadir)/config
+	$(INSTALL_PROGRAM) $(srcdir)/runtest $(bindir)/runtest
+	$(INSTALL_PROGRAM) $(srcdir)/runtest.exp $(dejadatadir)/runtest.exp
+	$(INSTALL_PROGRAM) $(srcdir)/../config.guess $(dejadatadir)/config.guess
+	-for file in $(srcdir)/lib/*.exp $(srcdir)/*.c; \
+	do \
+		$(INSTALL_DATA) $$file $(dejadatadir) ; \
+	done
+	-for file in $(srcdir)/baseboards/*.exp $(srcdir)/baseboards/README; \
+	do \
+		$(INSTALL_DATA) $$file $(dejadatadir)/baseboards ; \
+	done
+	-for file in $(srcdir)/config/*.exp $(srcdir)/config/README; \
+	do \
+		$(INSTALL_DATA) $$file $(dejadatadir)/config ; \
+	done
+	@$(MAKE) subdir_do DO=install $(FLAGS_TO_PASS)
+
+subdir_do: force
+	@for i in $(SUBDIRS); do \
+	   echo "Making $(DO) in $${i}..." ; \
+	   if [ -d ./$$i ] ; then \
+	     if (rootme=`pwd`/ ; export rootme ; \
+	       rootsrc=`cd $(srcdir); pwd`/ ; export rootsrc ; \
+	       cd ./$$i; \
+	       $(MAKE) $(FLAGS_TO_PASS) $(DO)) ; then true ; \
+	     else exit 1 ; fi ; \
+	   else true ; fi ; \
+	done
+force:
+
+clean mostlyclean:
+	-rm -f *~ core *.o a.out xgdb *.x
+	@$(MAKE) subdir_do DO=$@ $(FLAGS_TO_PASS)
+
+distclean maintainer-clean realclean: clean
+	@$(MAKE) subdir_do DO=$@  $(FLAGS_TO_PASS)
+	-rm -f *~ core
+	-rm -f Makefile config.status *-init.exp site.bak site.exp
+	-rm -fr *.log summary detail *.sum blockit config.cache
+
+check:	
+	@if [ -f testsuite/Makefile ]; then \
+	   rootme=`pwd`; export rootme; \
+	   cd testsuite; \
+	   $(MAKE) $(FLAGS_TO_PASS) check; \
+	else true; fi
+
+Makefile: $(srcdir)/Makefile.in config.status
+	@echo "Rebuilding the Makefile..."
+	$(SHELL) ./config.status
+
+configure:
+	@echo "Rebuilding configure..."
+	@if [ x"${srcdir}" = x"@srcdir@" ] ; then \
+	  srcdir=. ; export srcdir ; \
+	else true ; fi ; \
+	(cd $${srcdir}; autoconf)
+
+config.status: configure
+	@echo "Rebuilding config.status..."
+	$(SHELL) ./config.status --recheck

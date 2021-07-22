@@ -1,0 +1,2 @@
+# Use -mminimal-toc for AIX 4.X builds
+CFLAGS=-g -O2 -mminimal-toc

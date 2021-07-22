@@ -1,0 +1,59 @@
+# Makefile for newlib/libc/machine/hppa.
+# Copyright (c) 1994 Cygnus Support.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are permitted
+# provided that the above copyright notice and this paragraph are
+# duplicated in all such forms and that any documentation,
+# advertising materials, and other materials related to such
+# distribution and use acknowledge that the software was developed
+# at Cygnus Support, Inc.  Cygnus Support, Inc. may not be used to
+# endorse or promote products derived from this software without
+# specific prior written permission.
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+srcdir = .
+
+SHELL = /bin/sh
+
+TOP = ../../..
+SRCTOP = ../../..
+TARGETDOC = ../../targetdep.tex
+
+#### Host, target, and site specific Makefile fragments come in here.
+###
+
+OFILES = memchr.o memcmp.o memcpy.o memset.o setjmp.o strcat.o strcmp.o \
+strcpy.o strlen.o strncat.o strncmp.o strncpy.o
+
+all: lib.a
+lib.a: $(OFILES)
+	rm -f $@
+	$(AR) $(AR_FLAGS) $@ $(OFILES) $(COPYOFILES)
+
+# to support SunOS VPATH
+memchr.o: memchr.S
+memcmp.o: memcmp.S
+memcpy.o: memcpy.S
+memset.o: memset.S
+setjmp.o: setjmp.S
+strcat.o: strcat.S
+strcmp.o: strcmp.S
+strcpy.o: strcpy.S
+strlen.o: strlen.S
+strncat.o: strncat.S
+strncmp.o: strncmp.S
+strncpy.o: strncpy.S
+
+doc:
+
+clean mostlyclean:
+	$(RM) $(OFILES) *~ lib.a
+
+distclean maintainer-clean realclean: clean
+	rm -f Makefile config.status
+
+Makefile: Makefile.in $(host_makefile_frag) $(target_makefile_frag)
+	$(SHELL) config.status

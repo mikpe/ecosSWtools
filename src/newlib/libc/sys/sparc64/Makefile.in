@@ -1,0 +1,202 @@
+# Makefile for newlib/libc/sys/sparc64.
+# Copyright (c) 1994 Cygnus Support.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are permitted
+# provided that the above copyright notice and this paragraph are
+# duplicated in all such forms and that any documentation,
+# advertising materials, and other materials related to such
+# distribution and use acknowledge that the software was developed
+# at Cygnus Support, Inc.  Cygnus Support, Inc. may not be used to
+# endorse or promote products derived from this software without
+# specific prior written permission.
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+srcdir = .
+
+SHELL = /bin/sh
+
+TOP = ../../..
+SRCTOP = ../../..
+TARGETDOC = ../../targetdep.tex
+
+# _r.o is for the reentrant syscall stubs.
+# The .S_r.o/.c_r.o rules are from host/any.
+
+.SUFFIXES: .c .S .o _r.o
+
+.S_r.o:
+	$(CC) $(CFLAGS) $(CROSS_CFLAGS) $(TARGET_CFLAGS) $(NEWLIB_CFLAGS) -DREENT $(INCLUDES) -c $< -o $@
+.c_r.o:
+	$(CC) $(CFLAGS) $(CROSS_CFLAGS) $(TARGET_CFLAGS) $(NEWLIB_CFLAGS) -DREENT $(INCLUDES) -c $< -o $@
+
+# We no longer copy files out of /lib/libc.a.  This is kept around until
+# most of them have replacements.
+#
+#COPYOFILES = \
+#	Ovfork.o _sigvec.o abort.o access.o chown.o creat.o \
+#	errlst.o getdents.o getdtablesize.o getpid.o \
+#	getrusage.o gettimeofday.o ieee_globals.o ioctl.o isatty.o \
+#	kill.o popen.o sbrk.o sigblock.o sigpause.o sigsetmask.o \
+#	sigtramp.o sigvec.o sleep.o setitimer.o start_float.o \
+#	time.o times.o utime.o utimes.o wait3.o
+
+# These files are from Sun's libc.a but must be renamed because they
+# conflict with other library .o's. They are renamed to xxxS.o.
+# div.o is used by times.o. errno.o conflicts with libc/errno/errno.o.
+#COPYRENAMEOFILES = divS.o errnoS.o
+
+#COPYOMFILES = ieee_flags.o
+
+# CFILES_R, SFILES_R, and TEMPLATE_SFILES_R define those system calls that are
+# needed by the ANSI C part of newlib (and thus we must provide namespace
+# clean versions of them because we define REENTRANT_SYSCALLS_PROVIDED).
+
+CFILES = _main.c ieee.c \
+	closedir.c opendir.c readdir.c rewinddir.c scandir.c seekdir.c telldir.c \
+	creat.c isatty.c utime2.c
+
+CFILES_R =
+
+SFILES = cerror.S crt0.S dup2.S execve.S _exit.S sigsetjmp.S utime.S
+
+SFILES_R = sbrk.S wait.S
+
+# List of files built from template.S (with an '_' suffix).
+
+TEMPLATE_SFILES = access_ chdir_ chmod_ chown_ dup_ fcntl_ \
+	lstat_ mkdir_ pipe_ rmdir_ times_ umask_ utimes_
+
+TEMPLATE_SFILES_R = close_ fork_ fstat_ getpid_ gettimeofday_ kill_ \
+	link_ lseek_ open_ read_ stat_ times_ unlink_ wait4_ write_
+
+OFILES = $(COPYOFILES) $(COPYRENAMEOFILES) $(COPYOMFILES) \
+	$(SFILES:.S=.o) $(SFILES_R:.S=.o) $(SFILES_R:.S=_r.o) \
+	$(TEMPLATE_SFILES:_=.o) $(TEMPLATE_SFILES_R:_=.o) $(TEMPLATE_SFILES_R:_=_r.o) \
+	$(CFILES:.c=.o) $(CFILES_R:.c=.o) $(CFILES_R:.c=_r.o)
+
+#### Host, target, and site specific Makefile fragments come in here.
+###
+
+all: lib.a crt0.o
+
+lib.a: $(OFILES)
+	rm -f $@
+	$(AR) $(AR_FLAGS) $@ $(OFILES)
+
+$(COPYOFILES):
+	ar x /lib/libc.a $(COPYOFILES) 
+
+$(COPYRENAMEOFILES):
+	ar x /lib/libc.a $(COPYRENAMEOFILES:S.o=.o) 
+	for f in $(COPYRENAMEOFILES); do mv `basename $$f S.o`.o $$f; done
+
+$(COPYOMFILES):
+	ar x /lib/libm.a $(COPYOMFILES) 
+
+clean mostlyclean:
+	rm -f *.o lib.a stamp-srcs
+
+distclean maintainer-clean realclean: clean
+	rm -f Makefile config.status
+
+doc:
+
+Makefile: Makefile.in $(host_makefile_frag) $(target_makefile_frag)
+	$(SHELL) config.status
+
+stamp-srcs: Makefile template.S template_r.S
+	for f in $(TEMPLATE_SFILES:_=) ; \
+	do \
+		$(CC) -E -Dfunc=$$f \
+		$(CFLAGS) $(CROSS_CFLAGS) $(TARGET_CFLAGS) $(NEWLIB_CFLAGS) $(INCLUDES) \
+		$(srcdir)/template.S >$$f.S ; \
+	done
+	for f in $(TEMPLATE_SFILES_R:_=) ; \
+	do \
+		$(CC) -E -Dfunc=$$f \
+		$(CFLAGS) $(CROSS_CFLAGS) $(TARGET_CFLAGS) $(NEWLIB_CFLAGS) $(INCLUDES) \
+		$(srcdir)/template_r.S | sed -e 's/^_/#/' >$$f.S ; \
+	done
+	touch stamp-srcs
+
+# Make a dependency for each file built from a template.
+
+$(TEMPLATE_SFILES:_=.S) $(TEMPLATE_SFILES_R:_=.S): stamp-srcs
+
+# To support SunOS broken VPATH (sigh).
+
+_exit.o: _exit.S
+_main.o: _main.c
+access.o: access.S
+cerror.o: cerror.S
+chdir.o: chdir.S
+chmod.o: chmod.S
+chown.o: chown.S
+close.o: close.S
+closedir.o: closedir.c
+creat.o: creat.c
+crt0.o: crt0.S
+dup.o: dup.S
+dup2.o: dup2.S
+execl.o: execl.c
+execle.o: execle.c
+execlp.o: execlp.c
+execv.o: execv.c
+execve.o: execve.S
+execvp.o: execvp.c
+fcntl.o: fcntl.S
+fork.o: fork.S
+fstat.o: fstat.S
+getpid.o: getpid.S
+gettimeofday.o: gettimeofday.S
+ieee.o: ieee.c
+isatty.o: isatty.c
+kill.o: kill.S
+lseek.o: lseek.S
+lstat.o: lstat.S
+mkdir.o: mkdir.S
+open.o: open.S
+opendir.o: opendir.c
+pipe.o: pipe.S
+read.o: read.S
+readdir.o: readdir.c
+rewinddir.o: rewinddir.c
+rmdir.o: rmdir.S
+sbrk.o: sbrk.S
+scandir.o: scandir.c
+seekdir.o: seekdir.c
+sigsetjmp.o: sigsetjmp.S
+stat.o: stat.S
+telldir.o: telldir.c
+times.o: times.S
+umask.o: umask.S
+utime.o: utime.S
+utime2.o: utime2.c
+utimes.o: utimes.S
+wait.o: wait.S
+wait4.o: wait4.S
+write.o: write.S
+
+# Reentrant versions ...
+# These are all needed to support the ANSI C library routines.
+
+close_r.o: close.S
+fork_r.o: fork.S
+fstat_r.o: fstat.S
+getpid_r.o: getpid.S
+gettimeofday_r.o: gettimeofday.S
+kill_r.o: kill.S
+link_r.o: link.S
+lseek_r.o: lseek.S
+open_r.o: open.S
+read_r.o: read.S
+sbrk_r.o: sbrk.S
+stat_r.o: stat.S
+times_r.o: times.S
+unlink_r.o: unlink.S
+wait_r.o: wait.S
+wait4_r.o: wait4.S
+write_r.o: write.S

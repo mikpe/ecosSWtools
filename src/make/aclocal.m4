@@ -1,0 +1,65 @@
+dnl aclocal.m4 generated automatically by aclocal 1.2
+
+dnl
+dnl Check for a symbol
+dnl
+AC_DEFUN(AC_CHECK_SYMBOL, [dnl
+AC_MSG_CHECKING(for $1)
+AC_CACHE_VAL(ac_cv_check_symbol_$1, [dnl
+AC_TRY_LINK(, 
+changequote(,)dnl
+extern char *$1[]; puts(*$1);,
+changequote([,])dnl
+	    ac_cv_check_symbol_$1=yes, ac_cv_check_symbol_$1=no)])
+if test "$ac_cv_check_symbol_$1" = yes; then
+changequote(,)dnl
+  ac_tr_symbol=`echo $1 | tr '[a-z]' '[A-Z]'`
+changequote([,])dnl
+  AC_DEFINE_UNQUOTED(HAVE_${ac_tr_symbol})
+fi
+AC_MSG_RESULT($ac_cv_check_symbol_$1)])dnl
+dnl
+
+# Check to see if we're running under Win32, without using
+# AC_CANONICAL_*.  If so, set output variable EXEEXT to ".exe".
+# Otherwise set it to "".
+
+dnl AM_EXEEXT()
+dnl This knows we add .exe if we're building in the Cygwin32
+dnl environment. But if we're not, then it compiles a test program
+dnl to see if there is a suffix for executables.
+AC_DEFUN(AM_EXEEXT,
+[AC_REQUIRE([AM_CYGWIN32])
+AC_MSG_CHECKING([for executable suffix])
+AC_CACHE_VAL(am_cv_exeext,
+[if test "$CYGWIN32" = yes; then
+am_cv_exeext=.exe
+else
+cat > am_c_test.c << 'EOF'
+int main() {
+/* Nothing needed here */
+}
+EOF
+${CC-cc} -o am_c_test $CFLAGS $CPPFLAGS $LDFLAGS am_c_test.c $LIBS 1>&5
+am_cv_exeext=`echo am_c_test.* | grep -v am_c_test.c | sed -e s/am_c_test//`
+rm -f am_c_test*])
+test x"${am_cv_exeext}" = x && am_cv_exeext=no
+fi
+EXEEXT=""
+test x"${am_cv_exeext}" != xno && EXEEXT=${am_cv_exeext}
+AC_MSG_RESULT(${am_cv_exeext})
+AC_SUBST(EXEEXT)])
+
+# Check to see if we're running under Cygwin32, without using
+# AC_CANONICAL_*.  If so, set output variable CYGWIN32 to "yes".
+# Otherwise set it to "no".
+
+dnl AM_CYGWIN32()
+AC_DEFUN(AM_CYGWIN32,
+[AC_CACHE_CHECK(for Cygwin32 environment, am_cv_cygwin32,
+[AC_TRY_COMPILE(,[int main () { return __CYGWIN32__; }],
+am_cv_cygwin32=yes, am_cv_cygwin32=no)
+rm -f conftest*])
+CYGWIN32=
+test "$am_cv_cygwin32" = yes && CYGWIN32=yes])
+

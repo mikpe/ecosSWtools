@@ -1,0 +1,134 @@
+@chapter Installation Instructions
+@section Contents
+
+The following packages are included in the full release:
+
+Cygnus Developer's Kit (CDK):
+binutils, bison, byacc, dejagnu, diff, expect, flex, gas, gcc, gdb,
+itcl, ld, libg++, libstdc++, make, patch, tcl, tix, tk
+
+user tools:
+ash, bash, diff, fileutils, findutils, gawk, grep, gzip, m4, sed,
+shellutils, tar, textutils, time
+
+The user tools release only contains the user tools.
+
+Full source code is available for these tools.  It is split into
+these two units.  Ash is provided separately for now.
+
+@section Installing the binary release:
+
+Important!  Be sure to move out of the way any older versions of
+the gnu-win32 tools that exist in your $PATH (or delete them).
+
+Connect to one of the ftp servers listed above and cd to the directory
+containing the latest release.  On our primary server, that would be:
+
+@file{ftp://go.cygnus.com/pub/ftp.cygnus.com/gnu-win32/latest}.
+
+If you want the development tools and the programs necessary to run
+the GNU configure mechanism, you should download the whole release
+called @file{cdk.exe}.  If you only care about the user tools listed
+above, download @file{usertools.exe}.
+
+If you have an unreliable connection, download the binary in
+smaller chunks instead.  For the split cdk installer, get the files in
+the @file{cdk-split} subdirectory.  Once downloaded, combine the split
+files at the command prompt by doing a:
+
+@smallexample
+copy /b xaa + xab + xac + ... + xai + xaj cdk.exe
+del xa*.*
+@end smallexample
+
+The same process can be used for the user tools.
+
+Once you have an install executable on your system, run it.
+First off, the installer will prompt you for a location to
+extract the temporary files it needs to install the release on your
+system.  The default should be fine for most people.
+
+Next it will ask you to choose a default install location,
+@file{<system-drive>:\cygnus\b19}.  Feel free to choose another
+location if you would prefer.
+
+Finally, it will ask you for the name of the Program Files folder
+shortcut to add.  The default is @file{Cygwin32 Beta 19}.  When this
+step is completed, it will install the tools and exit.
+
+At this point, you should be able to look under the start menu and
+select "Cygwin32 Beta 19" (or whatever you named it).  This will
+pop up a bash shell with all special environment variables set up
+for you.  If you are running Windows 95 and are faced with the error
+message "Out of environment space", you need to increase the amount
+of environment space in your config.sys and try again.  Adding the line
+@code{shell=C:\command.com /e:4096 /p} should do the trick if @code{C:}
+is your system drive letter.
+
+There are two remaining thing you should do from this prompt.
+First, you need to type @code{mkdir -p /tmp} to ensure that a
+temp directory exists for programs that expect to find one there.
+
+Second, if you are installing the full distribution (@file{cdk.exe}),
+various programs will need to be able to find @file{/bin/sh}.  You
+should @file{mkdir -p /bin} and put a copy of @file{sh.exe} there,
+removing the older version, if present.  You can use the @file{mount}
+utility to select which drive letter is mounted as @file{/}. See the
+Frequently Asked Questions (FAQ) file for more information on
+@file{mount}.
+
+And you should be done!
+
+If you should ever want to uninstall the tools, you may do so
+via the "Add/Remove Programs" control panel.
+
+@section Updating to GNU-Win32 Beta 19.1
+
+An update to the Cygwin32 library is available from the GNU-Win32
+ftp sites in the directory gnu-win32-b19/b19.1-update.  This fixes
+several serious problems (including general instability under Win 95 and
+some network communication problems visible under both 95 and NT).
+There is a README file in the directory that explains how to install
+the update.
+
+@section Installing the source code
+
+Before downloading the source code corresponding to the release,
+you should install the latest release of the tools (either the full
+release or just the user tools).
+
+Create the directory that will house the source code.  @file{cd}
+there.
+
+Connect to one of the ftp servers listed above and cd to the directory
+containing the latest release.  On our primary server, that would be:
+
+@file{ftp://go.cygnus.com/pub/ftp.cygnus.com/gnu-win32/latest}.
+
+If you want the user tools source code, @file{cd} into the
+@file{usertools-src} subdirectory.  Download the files there.  If you
+want the Cygnus Developer's Kit sources, @file{cd} into the
+@file{cdk-src} subdirectory.  Download the files there.
+
+Back in the command.com, for the user tools source:
+
+@smallexample
+copy /b xba + xbb + xbc + xbd + xbe + xbf + xbg usersrc.tar.gz
+del xb*.*
+gunzip -d usersrc.tar.gz
+tar xvf usersrc.tar
+@end smallexample
+
+For the compiler tools source:
+
+@smallexample
+copy /b xca + xcb + xcc + xcd + ... + xck + xcl cdksrc.tar.gz
+del xc*.*
+gunzip -d cdksrc.tar.gz
+tar xvf cdksrc.tar
+@end smallexample
+
+Both will expand into a directory called @file{src}.
+
+And you should be done...
+

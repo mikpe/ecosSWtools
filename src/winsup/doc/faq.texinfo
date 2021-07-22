@@ -1,0 +1,16 @@
+\input texinfo 
+@title The GNU-WIN32/CYGWIN32 FAQ and protomanual 19.4 for release b19.1.
+@setfilename faq.txt
+
+@include what.texinfo
+@include sites.texinfo
+@include install.texinfo
+@include calls.texinfo
+@include how.texinfo
+@include relnotes.texinfo
+@include history.texinfo
+@include who.texinfo
+@include copy.texinfo
+
+Geoffrey Noer
+noer@@cygnus.com

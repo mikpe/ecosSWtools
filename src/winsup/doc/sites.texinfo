@@ -1,0 +1,77 @@
+@chapter GNU-Win32 Resources on the Internet
+
+@section FTP Sites
+
+The primary ftp site is
+@file{ftp://go.cygnus.com/pub/ftp.cygnus.com/gnu-win32}.  There
+are also several mirrors:
+
+@itemize @bullet
+@item North America:
+@itemize @bullet
+@item Alberta: @file{ftp://ftp.reversion.ca/pub/mirrors/gnu-win32}
+@item Arizona: @file{ftp://ftp.ninemoons.com/pub/gnu-win32}
+@item California: @file{ftp://go.cygnus.com/pub/ftp.cygnus.com/gnu-win32}
+@item California: @file{ftp://ftp.yggdrasil.com/mirrors/site/ftp.cygnus.com/pub/gnu-win32}
+@item California (secondary): @file{ftp://ftp.cygnus.com/pub/gnu-win32}
+@item Tennessee: @file{ftp://sunsite.utk.edu/pub/gnu-win32}
+@end itemize
+
+@item Central America:
+@itemize @bullet
+@item Costa Rica: @file{ftp://sunsite.ulatina.ac.cr/gnu-win32}
+@end itemize
+
+@item South America:
+@itemize @bullet
+@item Brazil: @file{ftp://ftp.unicamp.br/pub/gnu/=EXTRA=/cygnus/win32}
+@end itemize
+
+@item Africa:
+@itemize @bullet
+@item South Africa: @file{ftp://ftp.sun.ac.za/sites/ftp.cygnus.com/pub/gnu-win32}
+@end itemize
+
+@item Asia:
+@itemize @bullet
+@item Japan: @file{ftp://ftp.crl.go.jp/pub/GNU/cygnus/gnu-win32}
+@item Japan: @file{ftp://sysg.kek.jp/cygnus}
+@item Japan: @file{ftp://ftp.u-aizu.ac.jp/pub/gnu/gnu-win32}
+@item Korea: @file{ftp://cair-archive.kaist.ac.kr/pub/gnu/gnu-win32}
+@end itemize
+
+@item Australasia:
+@itemize @bullet
+@item Australia: @file{ftp://mirror.aarnet.edu.au/pub/gnu-win32}
+@end itemize
+
+@item Europe:
+@itemize @bullet
+@item Austria: @file{ftp://gd.tuwien.ac.at/pub/gnu/gnu-win32}
+@item Czech Republic: @file{ftp://sunsite.ms.mff.cuni.cz/MIRRORS/ftp.cygnus.com/pub/gnu-win32/}
+@item Denmark: @file{ftp://sunsite.auc.dk/pub/gnu-win32}
+@item France: @file{ftp://ftp.fwntug.org/gnu}
+@item France: @file{ftp://ftp.inria.fr/INRIA/Projects/Meta2/Scilab/Windows/cygwin/}
+@item Germany: @file{ftp://ftp.franken.de/pub/win32/develop/gnuwin32/cygwin32/mirrors/cygnus/}
+@item Greece: @file{ftp://ftp.ntua.gr/pub/pc/gnu-win32}
+@item Hungary: @file{ftp://ftp.szrmkk.hu/pub/gnu-win32/ftp.cygnus.com}
+@item Italy: @file{ftp://aaue.matrice.it/pub/gnu-win32}
+@item Slovenia: @file{ftp://sunsite.fri.uni-lj.si/pub/gnu-win32}
+@item Spain: @file{ftp://ftp.rediris.es/mirror/gnu-win32}
+@item Sweden: @file{ftp://ftp.sunet.se/pub/gnu/gnu-win32}
+@item Switzerland: @file{ftp://sunsite.cnlab-switch.ch/mirror/gnu-win32}
+@item UK: @file{ftp://sunsite.doc.ic.ac.uk/packages/gnu/cygnus/gnu-win32}
+@item Ukraine: @file{ftp://ftp.ics-co.kiev.ua/pub/mirror/ftp.cygnus.com/pub/gnu-win32}
+@end itemize
+@end itemize
+
+@section The Project WWW Site
+
+The main WWW page for the GNU-Win32 project is
+http://www.cygnus.com/misc/gnu-win32/
+
+A page containing tool-specific information is
+http://www.cygnus.com/pubs/gnupro/
+
+Links to additional documentation are accessible from the main
+web page.

@@ -1,0 +1,178 @@
+#! /bin/sh
+
+if [ x$1 != "x-record" ]; then
+    curdir=`pwd`
+
+    case "$0" in
+    /*) me=$0 ;;
+    *) me=$curdir/$0 ;;
+    esac
+    me="$me -record"
+
+    export TO_BE_BUILT
+    TO_BE_BUILT=$curdir/to-be-built
+
+    set -x
+    rm -f $TO_BE_BUILT
+    exec make all \
+	CC="$me recordit-cc" \
+	AS="$me recordit-as" \
+	LD="$me recordit-ld" \
+	AR="$me recordit-ar" \
+	RC="$me recordit-rc" \
+	MAKE="$me recordit-make" \
+	RANLIB="touch"
+fi
+
+shift
+
+# $s is set by the makefile.
+saved_srcroot=$s
+saved_pwd=`pwd`
+
+command=$1
+shift
+
+quoted_arg_list=
+target=
+c_file=
+saw_minus_c=
+libtool_mode=
+
+# scan the arg list.
+while [ $# -gt 0 ]; do
+
+    arg="$1"
+    shift
+
+    # per-command processing.  mainly, finding the target file.
+    case "$command" in
+
+    recordit-libtool)
+	case "$arg" in
+	--mode=link)
+	    libtool_mode=link
+	    continue		# don't record this arg
+	    ;;
+	--mode=compile)
+	    libtool_mode=compile
+	    continue		# don't record this arg
+	    ;;
+	-rpath)
+	    # skip this arg, and the next arg too.
+	    shift
+	    continue
+	    ;;
+	esac
+	;;
+
+    recordit-cc)
+	case "$arg" in
+	-g | -O* | -lm)
+	    # don't record these args
+	    continue
+	    ;;
+	-o)
+	    target=$1
+	    case $target in
+	    *.la)
+		# "libtool --mode=link cc -o libfoo.la ..."
+		# rewrite as "ar"
+		command="recordit-ar"
+		# and don't record the -o flag
+		continue
+		;;
+	    esac
+	    ;;
+	-c)
+	    saw_minus_c=yes
+	    ;;
+	*.c | *.cpp)
+	    c_file=$arg
+	    ;;
+	esac
+	;;
+
+    recordit-ar)
+	case $arg in
+	*.a)
+	    target=$arg
+	    ;;
+	esac
+	;;
+
+    recordit-rc)
+	case "$arg" in
+	-fo*)
+	    target=`echo $arg | sed 's/-fo//'`
+	    ;;
+	esac
+	;;
+
+    esac
+
+    # quote this arg.
+    case "$arg" in
+    *[!-a-zA-Z0-9_.,/=]*)
+	quoted_arg=\'`echo "$arg" | sed -e "s/['\\]/\\\\&/g"`\'
+	;;
+    *)
+	quoted_arg=$arg
+	;;
+    esac
+
+    quoted_arg_list="$quoted_arg_list $quoted_arg"
+done
+
+
+case $command in
+recordit-libtool)
+    case $libtool_mode in
+    link | compile)
+	eval exec $quoted_arg_list
+	;;
+    *)
+	echo >&2 "$0: Don't know what libtool --mode is being used."
+	exit 1
+	;;
+    esac
+    ;;
+
+recordit-cc)
+    if [ -z "$target" ]; then
+	if [ -n "$saw_minus_c" ]; then
+	    target=`echo $c_file | sed -e 's|.*/||' -e 's/\.cp*$//'`.o
+	else
+	    target=a.out
+	fi
+    fi
+    ;;
+
+recordit-ar)
+    case $target in
+    *.la)
+	# some makefiles know about libtool magic
+	[ -d .libs ] || mkdir .libs
+	date > .libs/`basename $target .la`.a
+	;;
+    esac
+    ;;
+
+recordit-make)
+    # we gotta override LIBTOOL by hand, since it's not
+    # passed down by the toplevel Makefile.
+    eval exec make $quoted_arg_list "'LIBTOOL=$0 -record recordit-libtool'"
+    ;;
+esac
+
+# make a fake target.  nonexecutable null file, since it's a cross target.
+touch $target || exit 1
+chmod -x $target
+
+cat >> $TO_BE_BUILT <<EOF
+TARGET $target
+PWD $saved_pwd
+SRCROOT $saved_srcroot
+CMD $command $quoted_arg_list
+
+EOF

@@ -1,0 +1,53 @@
+# Makefile for libc/sys/netware.
+# Copyright (c) 1994 Cygnus Support.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are permitted
+# provided that the above copyright notice and this paragraph are
+# duplicated in all such forms and that any documentation,
+# advertising materials, and other materials related to such
+# distribution and use acknowledge that the software was developed
+# at Cygnus Support, Inc.  Cygnus Support, Inc. may not be used to
+# endorse or promote products derived from this software without
+# specific prior written permission.
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+srcdir = .
+
+SHELL = /bin/sh
+
+TOP = ../../..
+SRCTOP = ../../..
+TARGETDOC = ../../targetdep.tex
+
+OFILES = \
+	environ.o \
+	getpid.o \
+	link.o
+
+#### Host, target, and site specific Makefile fragments come in here.
+###
+
+all: lib.a crt0.o
+lib.a: $(OFILES)
+	rm -f $@
+	$(AR) $(AR_FLAGS) $@ $(OFILES) 
+
+doc:	
+
+clean mostlyclean:
+	$(RM) $(OFILES) crt0.o *~ lib.a
+
+distclean maintainer-clean realclean: clean
+	rm -f Makefile config.status
+
+# to support SunOS VPATH
+crt0.o: crt0.c
+environ.o: environ.c
+getpid.o: getpid.c
+link.o: link.c
+
+Makefile: Makefile.in $(host_makefile_frag) $(target_makefile_frag)
+	$(SHELL) config.status

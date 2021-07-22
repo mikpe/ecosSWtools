@@ -1,0 +1,81 @@
+@chapter Known/potential Problems in the B19 Release
+
+@section Windows 95 freezing randomly
+Very occasionally, beta 19 tools will cause Windows 95 to freeze.
+This problem was fixed as of the b19.1 update release.
+
+@section Problems running non-cygwin applications from bash
+Interactive non-cygwin command line programs (like cmd.exe) fail
+to run in beta 19 (they exit immediately).  This problem was fixed
+as of the b19.1 update release.
+
+@section Long pause occurs randomly in bash
+It has been reported that bash will hang for several seconds upon
+occasion.  We are looking into this problem.  It does not
+seem to occur when bash is started under a command prompt.
+Reportedly, if you specify the 'Start in' directory in the shortcut,
+the problem does away.
+
+@section Setting CYGWIN32 environment variable causes crash in 19.1
+This is a known problem.  The 19.2 update release will address this,
+among other bugs not fixed in the 19.1 update.
+
+@section Configures sometimes die in a weird way
+Although ash as /bin/sh works fine for rebuilding the compiler tools,
+you may need to use a copy of bash.exe as /bin/sh to configure
+some other packages due to a quoting bug.  This will be fixed in
+the next major release.
+
+@section Fixed-length arrays in the dll
+There are still some places in the dll where fixed-length arrays are
+used instead of dynamic structures which makes us use more memory than
+necessary or limits the capabilities of the Cygwin32 layer.
+
+@section Programs can't deal with // pathname scheme in arguments
+gcc and other tools aren't fully compatible with the current pathname
+scheme: it can't grok an argument of -I//d/foo which means it is vital
+that when attempting to self-host, that only normal paths with single
+slashes are used.
+
+@section DOS special filenames
+Files cannot be named com1, lpt1, or aux (to name a few); either as
+the root filename or as the extension part.  If you do, you'll have
+trouble.  Unix programs don't avoid these names which can make things
+interesting.  Eg, the perl distribution has a file called @code{aux.sh}.
+The perl configuration tries to make sure that @code{aux.sh} is there,
+but an operation on a file with the magic letters 'aux' in it will hang.
+
+@section Stripped Tcl/Tk shells give Out of Mem error
+
+The stripped cygtclsh80.exe and cygwish80.exe provided
+as part of b19 is corrupted.
+If you rebuild it from the sources with debugging information, you
+should not have this problem.
+
+Or, download replacements from
+@file{ftp://ftp.xraylith.wisc.edu/pub/khan/tcl/tcltk-cygb19-fixed.tar.gz}.
+
+@section Stripping dlls
+
+Dll's with a .reloc section can't be stripped,
+if they are built using the default B19 linker.  This is because
+removing the .stab and .stabstr sections creates a hole in the image
+that the run time linker can't deal with.  The easiest workaround is
+to link your dll with -s.
+
+@section User defined mallocs.
+If you define a function called @code{malloc} in your own code, and link
+with the DLL, the DLL @emph{will} call your @code{malloc}.  You'd better
+make sure that your malloc more or less works.
+
+If you run any programs from the DOS command prompt, rather than from in
+bash, the DLL will try and expand the wildcards on the command line.
+This process uses @code{malloc} @emph{before} your main line is started.
+If you have written your own @code{malloc} to need some initialization
+to occur after @code{main} is called, then this will surely break.
+
+@section Mixed case filenames.
+The perl config causes some other problems too; the config<foo>.SH
+scripts generate a file called "Makefile", and use and delete a file
+called "makefile" on the way.  Because of the Win32 API's case
+insensitivity, this will nuke Makefile, leaving you with nothing.

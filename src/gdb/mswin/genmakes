@@ -1,0 +1,213 @@
+#! /bin/sh
+
+#srcroot=$1
+
+exec < to-be-built || exit 1
+
+while read type arg
+do
+	case x$type in
+	xTARGET)
+		target=$arg
+		continue  ;;
+	xPWD)
+		case $arg in
+		$curdir)
+			;;
+		*)
+			case $seendirs in
+			*" $arg "*)
+				curdir=$arg
+				exec >> $curdir/nmake.mak
+				;;
+			*)
+				curdir=$arg
+				seendirs="$seendirs $arg "
+				exec > $curdir/nmake.mak
+				;;
+			esac
+			;;
+		esac
+		continue  ;;
+	xSRCROOT)
+		srcroot=$arg
+		continue  ;;
+	xCMD)
+		cmdline=$arg ;;
+	x)
+		type=BLANK
+		continue  ;;
+	*)
+		echo Unknown line "'$type $arg'" 1>&2
+		continue  ;;
+	esac
+
+	target=`echo $target |
+	    sed -e 's/\.ores/.res/g' \
+		-e 's/\.o/.obj/g' \
+		-e 's/\.lo/.obj/g' \
+		-e 's/\.a/.lib/g' \
+		-e 's/\.la/.lib/g'
+	`
+
+	cmdline=`echo "$cmdline" |
+	    sed -e 's/\.ores/.res/g' \
+		-e 's/\.o/.obj/g' \
+		-e 's/\.lo/.obj/g' \
+		-e 's/\.a/.lib/g' \
+		-e 's/\.la/.lib/g'
+	`
+
+	# 'eval' because cmdline is quoted properly
+	eval set -- $cmdline
+	cmd=$1
+	shift
+
+	args=
+	deps=
+	while [ $# -gt 0 ]
+	do
+		arg=$1
+
+		# MSVC, -o is a linker option for .exe files.
+		# To name a different .obj file we need -Fo
+		case "$cmd,$1,$2" in
+		recordit-cc,-o,*.obj)
+		    arg="-Fo$2"
+		    shift
+		    ;;
+		esac
+
+		# quote arg correctly for NT and MSVC.
+		# "" surrounds an arg
+		# " in an arg is quoted like \"
+		# & is special: it must be "" quoted, but the shell
+		#  doesn't understand \", so we can't mix them.
+		case $arg in
+		*[\&]*)
+			case $arg in
+			*[\"]*)
+				echo >&2 "$0: Can't mix & and \" in arg!"
+				echo >&2 " cmd is $cmdline"
+				exit 1
+			esac
+			arg=\"$arg\"
+			;;
+		*[\ \"]*)
+			arg=`echo "$arg" | sed 's/["]/\\\\"/g'`
+			arg=\"$arg\"
+			;;
+		esac
+		args="$args $arg"
+
+		case $arg in
+		-*) ;;
+		$target) ;;
+		*.obj | *.lib | *.c | *.cpp | *.res | *.rc)
+			deps="$deps $arg"	;;
+		esac
+
+		shift
+	done
+
+	args=`echo "$args" | sed "s|$srcroot|"'$(SRCROOT)|g'`
+	deps=`echo "$deps" | sed "s|$srcroot|"'$(SRCROOT)|g'`
+
+	case $cmd in
+	recordit-cc)
+		case $target in
+		*.obj) ;;
+		*) target=${target}.exe ;;
+		esac
+
+		args='$(CC) '"$args"
+		;;
+	recordit-ar)
+		args='$(AR) '"-out:$target $deps"
+		;;
+	recordit-rc)
+		args='$(RC) '"$args"
+		;;
+	*)
+		echo "Unknown compiler command $1!!!" 1>&2
+	esac
+
+	echo
+	echo "$target: $deps
+	$args"
+
+	case $target in
+	gdb.exe | *.lib)
+		echo
+		echo "all:	$target"
+		echo
+		;;
+	esac
+done
+
+# Now, build up the top level nmake.mak file
+
+exec > nmake.mak
+
+cat << 'END'
+!include "setvars.mak"
+
+gdbdir = $(objdir)/gdb
+INCLUDE = -I$(msvc)/include -I$(msvc)/mfc/include -I$(msvc)/../mstools/ut
+
+COPTS= -nologo -G4 -MT -W3 -GX -Zi -YX -Od
+# -nologo = suppresses the startup banner
+# -G4 = codegen for 486 without impacting 386 or 586
+# -MT = use static multithreaded libraries
+# -W3 = warnings up to level 3
+# -GX = enable exception handling; call destructors on stack unwind
+# -Zi = put debug info into .PDB file
+# -YX = precompile headers into .PCH file
+# -Od = disable all optimizations
+
+CDEFS= -D__STDC__=0 -DALMOST_STDC -DWIN32 -DIN_WINGDB -D_WINDOWS -D_MBCS
+# __STDC__: most GNU uses #ifdef __STDC__ to test for ANSI features.
+#   however, MSVC doesn't define __STDC__ unless it's being strict ANSI.
+#   fortunately, MSVC headers test #if __STDC__ for strict ANSI,
+#   so we can -D__STDC__=0 to get the right effect.
+# ALMOST_STDC: an older hack for MPW.  inconsistently maintained.
+# WIN32: a deprecated form of _WIN32, which is predefined by both MSVC
+#   and cygwin32.
+# IN_WINGDB: intended for wingdb only.  isn't used much yet.
+# _WINDOWS: ?
+# _MBCS: enables multi-byte char set support?
+
+all:	setvars all-gdb
+
+setvars:
+	set CL=-FR$(gdbdir) -Fp$(gdbdir)/gdb.pch -Fd$(gdbdir)/gdb.pdb $(INCLUDE) $(COPTS) $(CDEFS)
+	set AR=lib -nologo
+	set SRCROOT=$(SRCROOT)
+	set RC=rc $(INCLUDE) -l 0x409 -d _DEBUG
+	set LIB=$(msvc)/lib;$(msvc)/mfc/lib
+	set LINK=-debug -subsystem:windows -machine:I386 -incremental:yes -pdb:$(gdbdir)/gdb.pdb
+#	set LINK=-debug -subsystem:console
+
+END
+
+curdir=`pwd`
+
+dirlist=`echo $seendirs | sed -e "s|$curdir/||g"`
+deps=all-`echo $dirlist | sed -e "s|/|-|g" -e "s|[ 	][ 	]*| all-|g" -e "s|all-gdb||"`
+
+for dir in $dirlist
+do
+	dep=`echo $dir | sed -e "s|/|-|"`
+	case $dir in
+	gdb) idep=$deps ;;
+	*) idep= ;;
+	esac
+	dir=`echo $dir | tr / '\\\\'`
+	echo "all-$dep: setvars $idep
+	cd $dir
+	nmake -nologo -f nmake.mak all"
+	dir=`echo $dir | sed -e "s|[^\\][^\\]*|..|g"`
+	echo "	cd $dir
+"
+done
+

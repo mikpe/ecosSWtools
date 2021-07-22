@@ -1,0 +1,59 @@
+#
+# Makefile
+#   Copyright (C) 1990, 1991, 1992, 1993 Free Software Foundation
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+#
+
+# This file was written, and is maintained by K. Richard Pixley
+# <rich@cygnus.com>.
+
+#
+# Makefile for newlib/libc/sys/h8300hms.
+#
+
+srcdir = .
+
+SHELL = /bin/sh
+
+TOP = ../../..
+SRCTOP = ../../..
+TARGETDOC = ../../targetdep.tex
+
+OFILES= syscalls.o trap.o
+
+#### Host, target, and site specific Makefile fragments come in here.
+###
+
+all: lib.a crt0.o
+lib.a: $(OFILES)
+	rm -f $@
+	$(AR) $(AR_FLAGS) $@ $(OFILES) 
+
+doc:	
+
+clean mostlyclean:
+	$(RM) $(OFILES)  crt0.o *~ lib.a
+
+distclean maintainer-clean realclean: clean
+	rm -f Makefile config.status
+
+Makefile: Makefile.in $(host_makefile_frag) $(target_makefile_frag)
+	$(SHELL) config.status
+
+# to support SunOS VPATH
+crt0.o: crt0.c
+trap.o: trap.c
+syscalls.o: syscalls.c

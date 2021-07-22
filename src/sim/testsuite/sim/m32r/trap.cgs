@@ -1,0 +1,11 @@
+# m32r testcase for trap #$uimm4
+# mach(): m32r 
+
+	.include "testutils.inc"
+
+	start
+
+	.global trap
+trap:
+
+	pass

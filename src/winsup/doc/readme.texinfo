@@ -1,0 +1,14 @@
+\input texinfo 
+@title README 19.4 for GNU-Win32 b19.1.
+@setfilename readme.txt
+
+@include sites.texinfo
+@include install.texinfo
+
+@chapter Release Beta 19 (Feb 26 1998)
+@include changes.texinfo
+
+@include relnotes.texinfo
+
+Geoffrey Noer
+noer@@cygnus.com

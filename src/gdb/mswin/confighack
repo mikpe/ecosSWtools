@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# This script runs "configure" for building wingdb, by
+# preloading the answers stored in "gdb/mswin/config.proto".
+
+# When done, it diffs config.proto against the newly-created
+# config.cache.  If there are differences, config.proto
+# needs to be updated and requalified.
+
+# Rationale: unless you run configure directly in Windows,
+# there's no particular way of finding the correct answers
+# to the questions that configure asks.  So the answers have
+# to be hard-coded _somewhere_.  By hard-coding it this way,
+# changes in configury can be easily tracked and maintained.
+
+# Note: this assumes that any real change in configury
+# causes a change in config.cache.  If someone changes the
+# semantics of an existing configure variable, things may
+# get confused.
+
+# In an ideal world, we would run configure on Windows
+# directly.
+
+# FIXME: configure ignores the cache for ac_cv_c_cross, so
+# the answer ("no") is wrong.  This seems harmless for now.
+
+case $# in
+2)	;;
+*)	echo >&2 usage: $0 SRCROOT TARGET
+	exit 2
+esac
+
+srcroot=$1
+target=$2
+
+# absolute srcroot
+srcroot=`cd $srcroot; pwd`
+
+buildhost=`$srcroot/config.guess` || {
+    echo >&2 "$0: Can't find a config.guess"
+    exit 7
+}
+
+# find config.proto
+
+CONFIG_PROTO=${CONFIG_PROTO-$srcroot/gdb/mswin/config.proto}
+
+if [ ! -r $CONFIG_PROTO ]; then
+    echo >&2 "$0: Warning: can't read $CONFIG_PROTO"
+    CONFIG_PROTO=`dirname $0`/config.proto
+    if [ ! -r $CONFIG_PROTO ]; then
+	echo >&2 "$0: Warning: can't read $CONFIG_PROTO"
+	echo >&2 "$0: Error: can't find a config.proto file"
+	exit 7
+    fi
+fi
+
+echo "loading answers from $CONFIG_PROTO..."
+. $CONFIG_PROTO || {
+    echo >&2 "$0: failed?"
+    exit 7
+}
+
+# export all the vars
+sed -n -e '/^[^#]*=/{;s/=.*//;p;}' $CONFIG_PROTO |
+(
+    while read var; do
+	eval export $var
+    done
+
+    set -x
+    rm -f config.cache
+    CC=gcc
+    export CC
+    $srcroot/configure -v \
+	--host=i386-windows \
+	--build=$buildhost \
+	--target=$target \
+	--cache=config.cache
+) || exit 1
+
+diff -c0 $CONFIG_PROTO config.cache && exit 0
+
+cat >&2 <<EOF
+
+*** WARNING ***
+Unexpected differences in config.cache.
+$CONFIG_PROTO probably needs to be updated and re-qualified.
+EOF
+exit 1

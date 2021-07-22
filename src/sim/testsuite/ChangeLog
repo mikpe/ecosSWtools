@@ -1,0 +1,115 @@
+Wed Feb 25 11:01:17 1998  Doug Evans  <devans@canuck.cygnus.com>
+
+	* Makefile.in (RUNTEST): Fix path to runtest.
+
+	
+Fri Feb 20 11:00:02 1998  Nick Clifton  <nickc@cygnus.com>
+
+	* sim/m32r/unlock.cgs: Fixed test.
+	* sim/m32r/mvfc.cgs: Fixed test.
+	* sim/m32r/remu.cgs: Fixed test.
+
+	* sim/m32r/bnc24.cgs: Test long BNC instruction.
+	* sim/m32r/bnc8.cgs: Test short BNC instruction.
+	* sim/m32r/ld-plus.cgs: Test LD instruction.
+	* sim/m32r/macwhi.cgs: Test MACWHI instruction.
+	* sim/m32r/macwlo.cgs: Test MACWLO instruction.
+	* sim/m32r/mulwhi.cgs: Test MULWHI instruction.
+	* sim/m32r/mulwlo.cgs: Test MULWLO instruction.
+	* sim/m32r/mvfachi.cgs: Test MVFACHI instruction.
+	* sim/m32r/mvfaclo.cgs: Test MVFACLO instruction.
+	* sim/m32r/mvtaclo.cgs: Test MVTACLO instruction.
+	* sim/m32r/addv.cgs: Test ADDV instruction.
+	* sim/m32r/addv3.cgs: Test ADDV3 instruction.
+	* sim/m32r/addx.cgs: Test ADDX instruction.
+	* sim/m32r/lock.cgs: Test LOCK instruction.
+	* sim/m32r/neg.cgs: Test NEG instruction.
+	* sim/m32r/not.cgs: Test NOT instruction.
+	* sim/m32r/unlock.cgs: Test UNLOCK instruction.
+Thu Feb 19 11:15:45 1998  Nick Clifton  <nickc@cygnus.com>
+
+	* sim/m32r/testutils.inc (mvaddr_h_gr): new macro to load an
+	address into a general register.
+
+	* sim/m32r/or3.cgs: Test OR3 instruction.
+	* sim/m32r/rach.cgs: Test RACH instruction.
+	* sim/m32r/rem.cgs: Test REM instruction.
+	* sim/m32r/sub.cgs: Test SUB instruction.
+	* sim/m32r/mv.cgs: Test MV instruction.
+	* sim/m32r/mul.cgs: Test MUL instruction.
+	* sim/m32r/bl24.cgs: Test long BL instruction.
+	* sim/m32r/bl8.cgs: Test short BL instruction.
+	* sim/m32r/blez.cgs: Test BLEZ instruction.
+	* sim/m32r/bltz.cgs: Test BLTZ instruction.
+	* sim/m32r/bne.cgs: Test BNE instruction.
+	* sim/m32r/bnez.cgs: Test BNEZ instruction.
+	* sim/m32r/bra24.cgs: Test long BRA instruction.
+	* sim/m32r/bra8.cgs: Test short BRA instruction.
+	* sim/m32r/jl.cgs: Test JL instruction.
+	* sim/m32r/or.cgs: Test OR instruction.
+	* sim/m32r/jmp.cgs: Test JMP instruction.
+	* sim/m32r/and.cgs: Test AND instruction.
+	* sim/m32r/and3.cgs: Test AND3 instruction.
+	* sim/m32r/beq.cgs: Test BEQ instruction.
+	* sim/m32r/beqz.cgs: Test BEQZ instruction.
+	* sim/m32r/bgez.cgs: Test BGEZ instruction.
+	* sim/m32r/bgtz.cgs: Test BGTZ instruction.
+	* sim/m32r/cmp.cgs: Test CMP instruction.
+	* sim/m32r/cmpi.cgs: Test CMPI instruction.
+	* sim/m32r/cmpu.cgs: Test CMPU instruction.
+	* sim/m32r/cmpui.cgs: Test CMPUI instruction.
+	* sim/m32r/div.cgs: Test DIV instruction.
+	* sim/m32r/divu.cgs: Test DIVU instruction.
+	* sim/m32r/cmpeq.cgs: Test CMPEQ instruction.
+	* sim/m32r/sll.cgs: Test SLL instruction.
+	* sim/m32r/sll3.cgs: Test SLL3 instruction.
+	* sim/m32r/slli.cgs: Test SLLI instruction.
+	* sim/m32r/sra.cgs: Test SRA instruction.
+	* sim/m32r/sra3.cgs: Test SRA3 instruction.
+	* sim/m32r/srai.cgs: Test SRAI instruction.
+	* sim/m32r/srl.cgs: Test SRL instruction.
+	* sim/m32r/srl3.cgs: Test SRL3 instruction.
+	* sim/m32r/srli.cgs: Test SRLI instruction.
+	* sim/m32r/xor3.cgs: Test XOR3 instruction.
+	* sim/m32r/xor.cgs: Test XOR instruction.
+Tue Feb 17 12:46:05 1998  Doug Evans  <devans@seba.cygnus.com>
+
+	* config/default.exp: New file.
+	* lib/sim-defs.exp: New file.
+	* sim/m32r/*: m32r dejagnu simulator testsuite.
+
+	* Makefile.in (build_alias): Define.
+	(arch): Define.
+	(RUNTEST_FOR_TARGET): Delete.
+	(RUNTEST): Fix.
+	(SCHEME,SCHEMEFLAGS,CGENDIR,CGENFLAGS): Define.
+	(check): Depend on site.exp.  Run dejagnu.
+	(site.exp): New target.
+	(cgen): New target.
+	* configure.in: Call AC_CHECK_PROG(SCHEME) if using cgen.
+	(arch): Define from target_cpu.
+	* configure: Regenerate.
+
+Wed Sep 17 10:21:26 1997  Andrew Cagney  <cagney@b1.cygnus.com>
+
+	* common/bits-gen.c (gen_bit): Pass in the full name of the macro.
+	(gen_mask): Ditto.
+
+	* common/bits-tst.c (main): Add tests for LSSEXT, MSSEXT.
+	(calc): Add support for 8 bit version of macros.
+	(main): Add tests for 8 bit versions of macros.
+	(check_sext): Check SEXT of zero clears bits.
+
+	* common/bits-gen.c (main): Generate tests for 8 bit versions of
+ 	macros.
+
+Thu Sep 11 13:04:40 1997  Andrew Cagney  <cagney@b1.cygnus.com>
+
+	* common/Make-common.in: New file, provide generic rules for
+ 	running checks.
+
+Mon Sep  1 16:43:55 1997  Andrew Cagney  <cagney@b1.cygnus.com>
+
+	* configure.in (configdirs): Test for the target directory instead
+ 	of matching on a target.
+

@@ -1,0 +1,1403 @@
+Mon Jul 20 14:46:33 1998  Christopher Faylor <cgf@cygnus.com>
+
+        * fhandler.cc (fhandler_base::fstat): Work around error with 
+        unreliable SetFileInformationByHandle.  Return correct value
+        for size of a file.
+
+Thu Jul 07 00:27:16 1998  Eric Bachalo <ebachalo@cygnus.com>
+
+        * dcrt0.cc: Allow @file to work as well as -@file.
+
+Thu Apr 30 14:11:30 1998  Christopher Faylor <cgf@cygnus.com>
+
+        * include/sys/cygwin.h: Remove cygnus-specific declaration.
+        * winsup.h: Move cygnus-specific cygwin32_attach_handle_to_fd
+        declaration here.  This function may eventually be replaced by
+        an osf_* function.
+ 
+Thu Apr 30 15:05:45 1998  Christopher Faylor <cgf@cygnus.com>
+
+        * console.cc (fhandler_console::init): If resetting stdin,
+        make sure to reset the ConsoleCtrlHandler.
+        * exceptions.cc (set_console_handler): New function broken out
+        of init_exceptions().  Sets the function responsible for handling
+        CTRL-C.
+        (init_exceptions): Snipped out set_console_handler.
+ 
+Wed May 20 02:21:37 1998  Geoffrey Noer <noer@cygnus.com>
+ 
+        patch from Christopher Faylor <cgf@cygnus.com>
+        * fhandler.cc (fhandler_serial::raw_read): When
+        vmin_ == 0, vtime_ > 0, don't force only one char at a time
+        to be read.
+        (fhandler_serial::tcsetattr): set to.ReadIntervalTimeout
+        and to.ReadTotalTimeoutMultiplier appropriately so reads
+        will time out properly when vmin_ == 0, vtime_ > 0.
+	
+Fri May  1 22:38:20 1998  Christopher Faylor <cgf@cygnus.com>
+
+        * environ.cc:  Add a global to control com port reset behavior.
+        (parse_options): Recognize "reset_com" as a CYGWIN32 option.
+        * fhandler.cc (fhandler_serial::raw_read): Handle vmin and vtime
+        more like UNIX.
+        (fhandler_serial::open): Revive code to reset com port on open.
+        Only reset the port if reset_com global is not set and if this
+        function is being called explicitly by open.
+        (fhandler_serial::tcsetattr): Make CRTSCTS flow control more
+        linke UNIX -- it should turn on hardware handshaking in both
+        directions.  Handle vmin and vtime in a manner more consistent
+        with UNIX.
+        (fhandler_serial::tcgetattr): Reflect CRTSCTS changes above when
+        reporting this state.
+        * include/sys/termios.h: Move CRTSCTS and CRTSXOFF (sic) into
+        16 bits or they will never be capable of being set.
+
+Tue Apr 28 16:10:24 1998  Geoffrey Noer <noer@cygnus.com>
+
+	* version.h: bump minor version to 2 for 98r1 release
+	* Makefile.in: change dll name to cygwin98r1.dll
+
+Wed Apr 22 15:43:56 1998  Geoffrey Noer <noer@cygnus.com>
+
+	* syscalls.cc (cygname): delete
+	* shared.cc (shared_name): new, was cygname
+	* strace.cc, exceptions.cc, sigproc.cc, shared.cc: fix
+	cygname references in light of above
+
+Wed Apr 22 14:12:09 EDT 1998  Christopher Faylor <cgf@cygnus.com>
+
+	* select.cc (fd_set_map::remove_pair_by_handle): minor optimization
+	* strace.cc (strace_printf): change format for consistency
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* dcrt0.cc (dll_crt0): Call global constructors explicitly
+	* tty.cc (create_tty_master): Remove code which attempted to
+	invoke tty constructor
+
+Tue Apr 21 16:18:27 EDT 1998  Christopher Faylor <cgf@cygnus.com>
+
+	* environ.cc (ucenv): inline
+	(posify): Ditto
+	(environ_init): remove obsolete function use
+	* path.cc (symlink_check_one): Set errno here where appropriate.
+	(readlink): Rely on errno set by symlink_check_one rather than
+	defaulting to EINVAL.  Should fix problems with RCS.
+
+Tue Apr 21 15:36:41 EDT 1998  Christopher Faylor <cgf@cygnus.com>
+
+	* Implement a NOSTRACE preprocessor define to allow building
+	Cygwin32 without any STRACE code.
+	* configure.in: Add entries for architecture specific programs
+	to allow easier cross-compile builds
+	* configure: Ditto
+	* Makefile.in: Ditto
+	* console.cc (fhandler_console::char_command): Fix two problems
+	with cursor position report:  1) it reported position relative
+	to beginning of buffer rather than beginning of screen,  2) it
+	reported y, x in reversed order
+	* dcrt0.cc: Remove NO_COPY from variables that don't need it.
+	Remove variables obsoleted by NO_COPY.
+	(dll_crt0_1): strace settings are now inherited.  Don't try
+	to initialize strace early.  Remove initialization of variables
+	which are now handled automatically by NO_COPY.  Set error mode
+	for Cygwin32 to fail on critical errors rather than popping up
+	a dialog box.
+	* spawn.cc (spawn_guts): Always use default error mode when
+	spawning a new process.  Move error message to more generally
+	useful location.  Terminate signal handling in a cygwin parent
+	process or two processes will be handling signals.
+	(_spawnve): Inherit strace stuff 
+	* exceptions.cc (events_init): Provide more information on
+	"Catastrophic failure".  Change error message wording slightly.
+	* fork.cc: Remove obsolete structure
+	(cygwin_fork_helper1): Remove use of obsolete structure.  Inherit
+	strace settings in child processes.
+	* sigproc.cc (sigproc_init): Set wait_sig priority immediately
+	after thread creation.
+	* smallprint.c: Remove unneeded include
+	* strace.cc: Reorganize to handle NOSTRACE
+	(strace_open): Use strace entries in pinfo structure which are
+	now inherited
+	(strace_dump): ditto
+	(strace_init): preprocessor define STRACE_HHMMSS causes strace
+	output to use alternate log file format.
+	(strace_printf): ditto
+	* syscalls.cc (access): Remove SetErrorMode in favor of global
+	cygwin32 setting in dll_crt0_1.
+	* fhandler.cc: Handle NOSTRACE
+	* tty.cc: Ditto
+	* window.cc: Ditto
+	* include/sys/strace.h: Ditto
+	* winsup.h: Move strace_file handle from per_process to pinfo so
+	that it can be inherited.  Remove obsolete pinfo entry.
+
+Tue Apr 21 14:30:52 EDT 1998  Christopher Faylor <cgf@cygnus.com>
+
+	* hinfo.cc (cygwin32_attach_handle_to_fd): New function
+	* include/sys/cygwin.h: Ditto.
+	* cygwin.din: Export new cygwin-specific function
+
+Tue Apr 21 02:32:08 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* syscalls.cc: comment out file_queue struct that doesn't
+	seem to be used for anything anymore.  Don't need to include
+	stdarg.h or sys/socket.h.  Include utmp.h.  Minor respacing.
+	Move all functions from misc.cc here.
+	(_read): change strace debug printf function name to _read
+	(logout): rename success to res
+	* misc.cc: delete file
+	* Makefile.in: adjust for above change
+
+Tue Apr 21 01:45:05 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* dir.cc: new file for directory-related functions, was
+	dirsearch.cc.
+	(mkdir, rmdir, writable_directory): move here from syscalls.cc,
+	writable_directory no longer static
+	* dirsearch.cc: delete file
+	* winsup.h: add proto for writable_directory.
+	* errno.cc: new file for errno-related functions, move errmap
+	struct here from syscalls.cc
+	(seterrno): move from syscalls.cc
+	(strerror): move from strerror.cc
+	* strerror.cc: delete file
+	* syscalls.cc: delete everything moved to any of the above files
+	* Makefile.in: adjustments for above
+
+Thu Apr 17 16:43:23 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* termios.cc: add comments, add extern "C" in front of exported
+	calls, move debugging local functions to end of file
+	* winsup.h: remove fork_terminate proto for function that is no
+	longer with us.  Add strccpy proto.
+	* spawn.cc (_spawnve): make static
+	(strccpy): remove in favor of identical function in exec.cc
+	* exec.cc (strccpy): no longer static
+
+	patch from newsham@lava.net (Tim Newsham):
+	* select.cc (cygwin32_select): fix off by one error, stop
+	using memcpy to copy memory over itself
+
+Thu Apr 16 16:23:00 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* net.cc: respace, put all fhandler_socket functions together
+	(getsockopt): fix case statement bug resulting in faulty strace
+	output
+	(setsockopt): ditto
+	* shared.cc: throughout, rename global h to cygwin_shared_h
+	* strerror.cc: make error global a local variable
+	* fhandler.h: add comments, add virtual function always_read_ready
+	to fhandler_serial which should return zero to allow non-blocking
+	serial I/O.
+	* Makefile.in: select.cc should depend on select.h
+
+Wed Apr 15 16:14:01 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* select.h: new file, containing macros used by select.cc.
+	* select.cc: remove them from here, include select.h
+
+Wed Apr 15 15:23:55 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* ntea.cc (NTReadEARaw): mark as static, don't check allow_ntea
+	since this is only accessed by functions that have already checked
+	it.
+
+Tue Apr 14 14:07:54 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* cygwin.din: export truncate call
+
+Mon Apr 13 23:15:13 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Throughout Cygwin32, rename *u for per_process data *user_data.
+	Likewise, rename *s for shared memory data *cygwin_shared.
+	Respace where necessary.
+	* registry.cc: minor respace
+	* registry.h: ditto
+	* net.cc: ditto
+	* fhandler.cc (fhandler_base::read): don't redeclare int len
+	* syslog.cc: add FIXME, reformatting, remove extern "C" around
+	whole file, add before exported functions
+	(syslog): rename second cp char pointer cp2
+	(setlogmask): comment out unused function
+	
+Mon Apr 13 17:55:43 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* environ.cc (parse_options): add "ntea" setting to CYGWIN32
+	env variable.  Setting determines whether NTEA is used or not.
+	* ntea.cc: Add allow_ntea global which is inited to FALSE.
+	Now instead of immediately returning FALSE, make all
+	functions check allow_ntea variable and use or not use NTEA
+	based on its value.
+	* ps.cc (main): widen Win32_pid field by one to better handle
+	Win 95 pids.
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* shared.cc (shared_info::initialize): increase default
+	heap_chunk_size to 128 mb to get around the problem that
+	Cygwin32 still can't cope with a split heap properly.
+
+Wed Apr  8 18:04:07 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* net.cc (cygwin32_bind, cygwin32_getsockname, cygwin32_listen,
+	cygwin32_shutdown): if should check sock, not s.
+
+Wed Apr  8 15:00:46 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Eliminate warnings revealed by -Wshadow -Wall:
+	* console.cc (FakeReadFile): fix aggregate with partly bracketed
+	initializer (add missing brackets).
+	* tty.cc (fhandler_tty_slave::close): remove unused variable tty
+	(fhandler_tty_slave::dup): ditto
+	(fhandler_tty_slave::send_ioctl_request): ditto
+
+Wed Apr  8 03:04:11 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Eliminate warnings revealed by -Wshadow -Wall:
+	* console.cc (FakeReadFile): change variable name index to
+	modifier_index.
+	(fhandler_console::read): remove second definition of flags
+	* dcrt0.cc (build_argv): rename s to start, e to end
+	(insert_files): reformat, add parens around assign used as truth
+	value, make i a DWORD, remove dup def of i.
+	* dlfcn.cc (set_dl_error): rename s to str
+	(checkAccess): rename to check_access
+	(checkPathAccess): rename to check_path_access
+	(getFullPathOfDll): rename to get_full_path_of_dll, don't
+	redeclare len
+	* dll_init.cc (DllList::detachDll): rename index to dll_index
+	* fork.cc (cygwin_fork_helper1): rename index to dll_index,
+	reformat slightly, rename res in dll load section to loadres,
+	don't redeclare rc two additional times
+	(dump_jmp_buf): rename s to sbuf
+	* grp.cc (initgroups): rename group arg to grp
+	* hinfo.cc (digits): rename s to str
+	(hinfo_vec::build_fhandler): rename first buf variable to
+	buf_info, the second to buff.
+	(hinfo_vec::linearize_fd_array): cast sizeof return to int,
+	declare i in for loop
+	(hinfo_vec::de_linearize_fd_array): declare i in for loop
+	* misc.cc (nice): rename pri to priority, index to curr
+	(cygname): rename s to str
+	(login): rename tty to currtty
+	(logout) put missing parens around arg to sizeof calls
+	* net.cc (DuplicateSocket): rename function to duplicate_socket,
+	rename s arg to sock
+	(fhandler_socket::fhandler_socket): rename s arg to sock
+	(socketpair): rename sin to sock_in
+	(cygwin32_rexec): rename passwd arg to password
+	* passwd.cc (parse): rename stat array to tmpbuf
+	* resource.cc (fill_rusage): rename creation to creation_time,
+	exit to exit_time, kernel to kernel_time, user to user_time
+	(getrusage): rename rusage arg to rusage_in
+	* sigproc.cc (proc_terminate): move i declaration outside of
+	loop, get rid of extra declaration
+	(getsem): rename s to str
+	(proc_strace): declare i at top of function, remove extra two
+	declarations of it later
+	* smallprint.c: include ctype.h for isalnum proto
+ 	(__small_vsprintf): put parens around assign used as truth value
+	* spawn.cc (spawn_guts): rename both s variables to str, remove
+	redeclarations of i
+	* strace.cc (mark): rename s arg to str
+	* syscalls.cc (chown): remove unused vars group, passwd
+	(access): rename s to st
+	(ctermid): rename s to str
+	* termios.cc (cfsetospeed, cfsetispeed): rename s to speed
+	* times.cc (times): rename creation to creation_time,
+	exit to exit_time, kernel to kernel_time, user to user_time
+	(time_t_to_filetime, timeval_to_filetime): rename time to time_in
+	* tty.cc (create_tty_master): rename utmp variable our_utmp
+	(fhandler_tty_master::init): rename ttynum arg ttynum_in
+	
+Tue Apr  7 17:18:05 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* syscalls.cc (seterrno): add FIXME
+	* path.cc (symlink_check_one): change comment wording
+
+	patch from Tom Tromey (tromey@cygnus.com)
+	* syscalls.cc (access): Call SetErrorMode to turn off critical
+	errors dialog.
+
+	patch from Mikey (jeffdb@netzone.com):
+	* fhandler.cc (fhandler_disk_file::open): under Win95, set
+	S_IXOTH|S_IXGRP|S_IXGRP if the first two bytes of a file contain
+	a '#!'.
+	(fhandler_disk_file::check_execable_p): consider shell scripts
+	execable
+
+Mon Apr  6 20:55:06 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/sys/cygwin.h: add protos for cygwin32 path conversion
+	functions.
+
+Wed Apr  1 16:12:58 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* {fhandler.cc, fhandler.h, hinfo.cc, console.cc}: Rename
+	fhandler_tty class to fhandler_serial
+
+Tue Mar 31 16:27:36 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* ntea.cc: temporarily disable reading/writing NTEA information
+	due to the large penalty incurred on NT fat partitions.
+
+Fri Mar 27 13:35:30 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* select.cc: mark two globals NO_COPY
+
+Fri Mar 27 13:35:30 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* environ.cc (parse_options): change struct to union to avoid
+	references to uninitialized fields.
+
+Thu Mar 26 19:03:00 1998  Eric Bachalo  <ebachalo@cygnus.com>
+
+	* dcrt0.cc (insert_files): added this function to replace
+	-@file in the command line with the contents of the file
+	(dll_crt0_1): calls insert_files before building argv
+
+Wed Mar 25 15:25:26 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	And more:
+	* {fhandler.cc, fhandler.h, tty.cc, net.cc, console.cc}: make
+	ioctl calls' cmd arg unsigned, ditto for access arg of init calls.
+	* console.cc (fhandler_console::fillin_info): add parens around
+	assignment used as truth value.
+	(FakeReadFile): make copied_chars a size_t
+	(fhandler_console::read): make i in loop unsigned
+	* environ.cc (setenv): make l_value unsigned, add parens around
+	assignments used as truth values.
+	* exceptions.cc (call_handler): supposed to return an int and
+	wasn't at the end of control flow.  Now returns 1 there.
+	* fhandler.h (~fhandler_base): destructor should be marked virtual
+	* misc.cc (login): add parens around assignment used as truth
+	value.
+	* net.cc: cast INVALID_SOCKET to int in comparisons
+	(fhandler_socket::ioctl): remove int cast to FIONBIO since cmd
+	is now unsigned
+	(get_win95_ifconf): add cast to signed vs unsigned int comparison.
+	* ntea.cc (NTReadEA): add cast to signed vs unsigned int
+	comparison.
+	* path.cc (getcwd_inner): make len a size_t
+	* pinfo.cc (cygwin32_winpid_to_pid): add comment
+	* select.cc (cygwin32_select): make wait_ret an int
+	* signal.cc (kill_worker): add parens around assignments used as
+	truth values.
+	* sigproc.cc (wait_sig): make rc a DWORD
+	(sig_send): add parens around assignment used as truth value.
+	* strace.cc: make inqueue global a static DWORD
+	* tty.cc (do_output): add cast to signed vs unsigned int
+	comparison.
+	(fhandler_pty_master::open): remove unused handle nh
+
+Tue Mar 24 18:03:59 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	More spring cleaning:
+	* net.cc: move LOAD macro definition out of winsock_init,
+	correction to make it valid ANSI C++.
+	* grp.cc (read_etc_group): pass default line directly to
+	add_grp_line call
+
+Mon Mar 23 19:21:00 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/Windows32/Defines.h: define MNC_CLOSE et al
+	
+	Spring cleaning with -Wall:
+	* console.cc (fhandler_console::de_linearize): return int
+	* dirsearch.cc (readdir): remove unused variable reason
+	* dll_init.cc (DllListIterator::DllListIterator): reorder
+	initializers to match declaration order
+	* environ.cc (environ_init): remove unused variable cygix
+	* exceptions.cc (__cygwin32_exception_handler): put parents
+	around sizeof call
+	* fhandler.cc (fhandler_base::read): remove unused variable i
+	* fhandler.h: minor respacing
+	* hinfo.cc: respacing
+	(hinfo_vec::build_fhandler): remove unused label out
+	* init.cc (dll_entry): remove unused variable p
+	* passwd.cc: remove unused last_passwd struct
+	(search_for): remove already commented out references to it
+	* select.cc (fd_socket_map::create_arrays): return result
+	of calling fd_set_map::create_arrays
+	(fd_socket_map::add): return result of calling fd_set_map::add
+	(auto_del_fd_set_map::add): return void, not int
+	* sigproc.cc (proc_subproc): remove unused variables i, rcw
+	(proc_terminate): remove unused variable r
+	(sigproc_init): remove unused variable tid
+	* spawn.cc (spawn_guts): remove unused variable magic[2]
+	* syscalls.cc (system): remove unused variable pid
+	(statfs): remove  unused variable err
+	* tty.cc (fhandler_tty_master::init): return int
+	(fhandler_tty_slave::linearize): return int
+	(fhandler_tty_slave::de_linearize): return int
+	(fhandler_pty_master::linearize): return int
+	(fhandler_pty_master::de_linearize): return int
+
+Mon Mar 23 19:21:00 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* tty.cc (do_input): compare a char with current termios
+	settings, but not with constants.
+	(do_output): debug printf in a loop disabled.
+	* environ.cc (parse_options): change struct to union to avoid
+	references to uninitialized fields.
+
+Mon Mar 23 19:21:00 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* spawn.cc (spawn_guts): Don't call close_all_files if a cygwin
+	process has been spawned.  Otherwise, we close tty handles twice.
+
+Fri Mar 20 23:01:24 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* pinfo.cc (pinfo_list::init): Initialize next_pid to PBASE.
+	(pinfo_list::operator []): Now index is given by pid mod size().
+	(pinfo_list::allocate_pid): Allow more pid numbers than spaces in
+	the process table.  Pids now can range from PBASE (1000) to
+	INT_MAX.  At that point they wrap to 1000 again.  For speed, use
+	modular arithmetic to map pids into table.
+	* winsup.h: move PBASE to pinfo.cc, rename next_pid_index to
+	next_pid
+	* utils/ps.cc (main): reorg of what's printed where, listing pid
+	first.
+
+Thu Mar 19 15:05:07 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* winsup.h: Change section name in NO_COPY definition.  We were
+	using a .data$nocopy section to avoid copying certain data on
+	fork.  The linker used to include this between __data_start__ and
+	__data_end__, but that broke building the cygwin32 dll.  The fix
+	is to rename the section ".data_cygwin_nocopy" and explictly
+	include it after __data_end__.
+
+Wed Mar 18 15:03:51 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* tty.h: fix ttyslot proto; it returns an int
+	* glob.h: fix glob proto; it returns an int
+
+Mon Mar 16 16:16:40 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* Makefile.in: stop installing the dll in the lib directory as
+	well as the bindir.
+	* environ.cc (parse_options): don't need to call malloc
+
+Mon Mar 16 11:56:23 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* tty.cc (fhandler_tty_slave::dup): Don't set flags to 0.  Flags
+	have already been set in wrapper.
+	* net.cc: Rename `s' variable which shadows global `s'.
+	* termios.cc: ditto
+	* time.cc: ditto
+
+Tue Mar 10 15:54:04 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* version.h: up CYGWIN_DLL_VERSION_MINOR
+
+Tue Mar 10 15:41:29 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* wait.cc (wait4): Attempt to work around theorized problem where
+	Windows 95 incorrectly causes a WaitForSingleObject to return an 
+	error when its thread is suspended.
+
+Tue Mar 10 15:41:29 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* net.cc: Do not duplicate sockets on Windows NT because of
+	problems with MS winsock proxy server.
+	(DuplicateSocket): new local function
+
+Tue Mar 10 15:41:29 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* console.cc: Include fcntl.h
+	(fhandler_console::init): call open() with a valid open mode.
+	* tty.cc (fhandler_tty_slave::init): call open() with a valid
+	open mode.
+
+Tue Mar 10 15:41:29 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* net.cc: Mark wsock32 import pointers as NO_COPY.  This fixes
+	a problem with traps in open() calls in a forked process when the
+	parent uses sockets, but the child does not.
+
+Tue Mar 10 15:41:29 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* spawn.cc (spawn_guts):  Make argument handling after `#! pgm'
+	handle spaces similarly to UNIX.  Close "linearized" file handles
+	when a non-cygwin32 binary is executed or suffer hangs on exit.
+	Reorganize lpReserved2 buffer to avoid conflicts with Microsoft
+	usage which resulted in incorrect stdin/stdout operation with
+	programs compiled using MSVC.
+	* pinfo.cc (pinfo_init):  Accomodate change to lpReserved2
+	organization.
+
+Mon Mar  9 19:27:17 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* syscalls.cc (_open): modify to take a variable number of
+	arguments to match newlib's fcntl.h.
+	* environ.cc (parse_options): rewrite struct known to conform
+	to ANSI standards.  Can't statically initialize, so do so
+	dynamically at the beginning of the function instead.
+
+	patch from jeffdb@netzone.com (Mikey):
+	* dcrt0.cc (build_argv, compute_argc): need to escape quotes
+
+Sat Feb 28 16:41:54 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* fhandler.cc (fhandler_base::init): call set_flags based on
+	access arg.
+	* net.cc: include fcntl.h
+	(fhandler_socket::fhandler_socket): made sockets O_RDWR
+
+Sun Feb 22 17:44:55 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* environ.cc (parse_options): comment out -- no longer
+	compiles with egcs.  Will rewrite/enable later.
+
+Sun Feb 22 13:49:10 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* syscalls.h: remove protos for _open, _read, _write since
+	they are in newlib headers that are already included
+	* syscalls.cc (_read): return int, not ssize_t
+	(_write): ditto
+
+Sat Feb 21 14:21:17 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* Makefile.in: rename dll to cygwindevo.dll
+
+Thu Feb 26 23:41:54 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Beta 19 release made.
+
+Sun Feb 22 23:46:31 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* Makefile.in: Do not link cygwinb19.dll with libwsock32.a
+	* exceptions.cc: add proto for i_WSACleanup.
+	(sig_handle): call *i_WSACleanup if winsock was inited.
+	* hinfo.cc: add proto for i_getpeername.
+	(hinfo_vec::build_fhandler): call *i_getpeername if winsock
+	was inited
+	* net.cc: wsock32, i_wsockimports - new globals.  Throughout
+	file, call winsock functions via indirect pointers.
+	(winsock_init): dynamically load wsock32.dll and resolve addresses
+	of exports.
+	(cygwin32_rcmd, cygwin32_rexec, cygwin32_rresvport): resolve
+	addresses of exports.
+	* select.cc: add protos for i___WSAFDIsSet, i_WSAGetLastError,
+	i_select, i_socket, i_closesocket.  WINSOCK_FD_ISSET changed to
+	use indirect pointer.  Direct winsock calls changed to indirect.
+	(cygwin32_select): initialize winsock before calling select in 
+	degenerate case.
+	* winsup.h: remove protos for ScreenRows, ScreenCols,
+	ScreenGetCursor, ScreenSetCursor.
+
+Sat Feb 21 01:33:56 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* cygwin.din: remove dup definition of endpwent
+
+Thu Feb 19 14:20:21 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* console.cc (fhandler_console::write_normal): Don't scroll screen
+	if cursor is on the bottom of the console window buffer.
+	Scrolling seems to happen automatically in that scenario.
+
+Thu Feb 19 14:20:21 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/cygwin32/cygwin_dll.h: Correct protection wrapper
+
+Tue Feb 17 20:21:24 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/Windows32/Structures.h: tagBITMAPFILEHEADER should
+	be packed.
+
+Tue Feb 17 19:34:41 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* environ.cc (parse_options): Preserve CYGWIN32 environment
+	variable from strtok or risk truncation.
+
+Tue Feb 17 19:34:41 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* strace.cc (strace_init): make strace_mutex inherittable.
+
+Tue Feb 17 19:34:41 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	Wrap calloc calls like for malloc/realloc/free.
+	* cygwin.din: (calloc, _calloc): points to cygwin's
+	export_calloc.
+	* libccrt0.cc (cygwin_crt0_common): initialize
+	cygwin_statu.calloc.
+	* malloc.cc (calloc, export_calloc): new.
+	* syscalls.h: add export_calloc proto.
+	* winsup.h (class per_process): calloc - new member.
+	public_reserved space decreased by 1.
+
+Tue Feb 17 19:34:41 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* getopt.c: move global debug variable into if 0
+
+Tue Feb 17 19:34:41 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* cygwin.din: export sigpause
+	* signal.cc (sigpause): New "compatibility interface" to
+	sigsuspend function.  Used currently by inetutils.
+
+Tue Feb 17 11:43:27 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* tty.h (class tty): Add slave_opened field.
+	* tty.cc (fhandler_tty_master::init): Initialize slave_opened.
+	(do_output): Only return with EOF if the slave has been opened.
+	(fhandler_tty_slave::open): Set slave_opened.
+	(fhandler_pty_master::open): Initialize slave_opened.
+
+	* tty.cc (fhandler_pty_master::read): Change type of n to DWORD.
+	If there are no characters to read, and the descriptor is in
+	nonblocking mode, just return EGAIN.
+
+Mon Feb 16 15:11:25 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* tty.h (class tty): Remove handle_pid and slave_handles fields.
+	(class tty_list): Add getcount method.
+	* tty.cc (tty::init): Initialize input_handle and output_handle.
+	(tty_list::free_tty): If we just freed the last reference to this
+	tty, close input_handle and output_handle.
+	(fhandler_tty_master::init): Don't initialize handle_pid and
+	slave_handles.
+	(do_output): Instead of just calling ReadFile, loop using
+	PeekNamedPipe and check whether the tty has been closed.  Return 0
+	on EOF and -1 on error.
+	(process_output): Only print debugging error message if error
+	occurs in do_output.
+	(fhandler_tty_slave::open): Always duplicate handles from master.
+	Never close handles in source.  Don't change slave_handles.
+	(fhandler_tty_slave::close): Don't change slave_handles, and don't
+	close tty handles.
+	(fhandler_tty_slave::linearize): Call attach_tty.
+	(fhandler_tty_slave::de_linearize): Don't call attach_tty.
+	(fhandler_tty_slave::dup): Don't increment slave handles.
+	(fhandler_pty_master::open): Don't initialize handle_pid and
+	slave_handles.
+	(fhandler_pty_master::close): Don't check slave_handles, and don't
+	close tty handles.
+	(fhandler_pty_master::read): Handle EOF return value from
+	do_output.
+	(fhandler_pty_master::linearize): Call attach_tty.
+	(fhandler_pty_master::de_linearize): Don't call attach_tty.
+
+	* fork.cc (cygwin_fork_helper1): Copy strace_mask from parent to
+	child.
+
+Thu Feb 12 20:33:57 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* utils/cygwin.cc: Modify -s option to use new strace_mask entry
+	in pinfo.  Prepare for future ability to specify an strace file.
+
+Thu Feb 12 11:57:26 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* grp.cc (read_etc_group): add a default /etc/group in memory
+	if /etc/group isn't found
+	(getgrnam): return NULL if requested group isn't found instead
+	of returning a default group
+
+Wed Feb 11 15:59:10 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* strace.cc (strace_open): do not close u->strace_file if it
+	points to stderr.
+	* malloc.cc (malloc_init): do not check for application's malloc
+	in a forkee, this breaks memory coherency in a forkee and forker.
+	use_internal_malloc flag now copies on fork.
+
+Tue Feb 10 18:11:30 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* utils/cygwin.cc (set_strace): adjust func to take account
+	of recent changes to strace struct
+
+Tue Feb 10 18:11:30 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor)
+	Throughout sources, mark statics and globals as NO_COPY where
+	appropriate.
+	* fork.cc (cygwin_fork_helper1): Remove #if 0 around fork_copy of
+	cygwin data/bss.  Remove __malloc_copy since it is no longer
+	necessary.
+
+Tue Feb 10 15:30:19 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	Fixes scenario where we have a cygwin-compiled dll which calls
+	cygwin.dll-provided malloc and free.  Some application uses
+	this dll, but provides its own malloc/free.  To avoid a two mallocs
+	problem, cygwin.dll must wrap calls to malloc from this dll to
+	application-provided malloc!
+	* malloc.cc: add static variables export_malloc_called,
+	use_internal_malloc.
+	(export_free, export_realloc): call newlib's malloc/free if
+	use_internal_malloc is set or application-provided ones otherwise.
+	(export_malloc): ditto, set export_malloc_called.
+	(malloc_init): check if malloc suite is proveded by an application.
+
+Tue Feb 10 15:30:19 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor)
+	* console.cc (fhandler_console::write): Implement xterm style
+	escape sequences for setting title in the console title bar.
+	* fhandler.h: Define constants for console title escape sequence.
+
+Tue Feb 10 14:16:17 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/a.out.h: remove junk chars introduced by mailer
+	when this header was sent to us
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* libccrt0.cc: rename cygwin_attach_dll to cygwin32_attach_dll
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* environ.cc: fix off by one problem 
+
+Mon Feb  9 14:56:00 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* Makefile.in: add registry.h to environ.o deps
+
+Mon Feb  9 13:53:50 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* fhandler.cc (fhandler_base::fhandler_base): initialize
+	openflags_ variable.
+	* hinfo.cc (hinfo_vec::not_open): fixed a bug in checking open
+	fd's range.
+	* select.cc (cygwin32_select): restore fd sets if select() call
+	was interrupted by a signal.
+	* syscalls.cc: include sys/socket.h
+	(_read): if non-blocking i/o is set, check for data availability
+	by calling cygwin32_select() with a zero timeout, set ERRNO to
+	EAGAIN and return -1 if no data is available.
+	* tty.cc (fhandler_pty_master::read): removed a check for data
+	availability if non-blocking i/o is set.
+	* winsup.h: prototype for select_init() removed, prototype for
+	cygwin32_select() added.
+
+Mon Feb  9 13:53:50 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	Moves all environment manipulation into environ.cc.
+	Switches to CYGWIN32 for settings:
+	  set CYGWIN32=[no]title [no]strip_title [no]binmode [no]glob
+	              strace=mask:cache,file [no]tty
+	(set STRACE=whatever is still honored).
+	Propagates tty settings to all subprocesses regardless of
+	unsetting of environment variable.
+	Moves strace mask into pinfo structure for easier future
+	manipulation by external program.  Moves strace_file into the
+	vacated position for automatic use in forked processes.
+	Propagates old title to execed processes so that they can
+	correctly restore the correct title when they exit.
+	* console.cc:  Use PID_USETTY setting in process_state so that
+	tty state can be easily inherited.
+	(set_console_title):  New function to set console title.
+	* syscalls.cc:  Use PID_USETTY setting in process_state so that
+	tty state can be easily inherited.
+	* tty.cc: Ditto.
+	* hinfo.cc: Ditto.
+	(hinfo_vec::de_linearize_fd_array): Return last location in buffer
+	for further potential processing.
+	* dcrt0.cc:  Add global variables for control of glob and title,
+	set by environ_init.  Mark some variables as NO_COPY.
+	Remove routines and variables for dealing with environment.
+	(dll_crt0_1): Move environment initialization into separate
+	function.  Honor 'noglob' CYGWIN32 setting.
+	* environ.cc (environ_init): New function to initialize the
+	environ table.  Also scans for CYGWIN32 environment variable,
+	setting appropriate values.
+	(ucenv): New function.  Upper cases an environment variable.
+	(parse_options): New function.  Parse CYGWIN_* environment
+	variable.
+	(posify): New function.  Convert a Windows env path spec to
+	cygwin.
+	(env_sort): New function.  Sort an environ block.
+	(winenv): New function.  Returns a windows style environment
+	block.
+	* fhandler.cc (fhandler_base::read): Reflect change to location of
+	strace_mask.
+	* fork.cc (cygwin_fork_helper1): Remove save/restore of some
+	settings since this is automatic now with new dll data copy.  Save
+	PID_USETTY setting in child process_state.
+	* strace.h: Cosmetic change.
+	* pinfo.cc (pinfo_init):  Call environ_init here since it may
+	affect further processing in this function.  Use old console title
+	from "parent" process if execed process.  Reflect change to
+	location of strace_mask.
+	* spawn.cc (spawn_guts): Remove environment manipulation code.
+	Use new winenv function call instead.  Save old title in block of
+	memory copied to newly execed process if title is being displayed.
+	* strace.cc:  Changes to reflect new location for strace_mask and
+	strace_file.  These are now automatically inherited on fork.
+	* winsup.h:  Move strace_mask into pinfo to allow possible
+	manipulation by other processes.  Put u->strace_file in uptr
+	structure so that it will be automatically duplicated on fork,
+	removing the necessity of initializing strace in a forked
+	process.  Add functions/variables associated with environment
+	manipulation and console title setting.
+
+Mon Feb  9 14:42:24 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* Makefile.in (DLL_OFILES): Rename dllinit.o to dll_init.o.
+
+	* tty.cc (fhandler_tty_slave::close): Don't close the tty handles
+	if the slave and the master are the same process.
+
+	* path.cc (read_mounts): Change key parameter to reference, to
+	avoiding running the destructor.
+
+Mon Feb  9 03:06:56 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* path.cc (endmntent): Return 1 from endmntent since `df' seems
+	to expect this.  This makes cygwin df.exe operational.
+
+Mon Feb  9 03:06:56 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Christopher Faylor):
+	* sigproc.cc:  Ensure that no dll data is copied for this module
+	as it is currently unnecessary.
+
+Mon Feb  9 03:06:56 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Extensive reformatting in new files from next patch.
+	Rename dllinit.h file to dll_init.h and likewise for dll_init.cc.
+	Rename cygwin_detach_dll to cygwin32_detach_dll throughout.
+	Similarly, rename cygwin_attach_dll and _cygwin_dll_entry.
+	And rename sanityAndSyncCheck to check_sanity_and_sync.
+	Also:
+	* dll_init.h: don't include winsup.h
+	* dll_init.cc: include winsup.h here instead
+	* dlfcn.cc: include winsup.h, don't include windows.h
+	* cygwin.din: rename cygwin_detach_dll to cygwin32_detach_dll.
+
+	patch from giac@dalim.de (Philippe Giacinti):
+	Copy data areas of cygwin-compiled dlls on fork(),
+	implement dlopen/dlsym/dlclose/dlerror calls.
+	* Makefile.in: add dlfcn.o and dllinit.o to DLL_OFILES, add
+	dllinit.h dependencies
+	* cygwin.din: dll_dllcrt0, cygwin_detach_dll, dlopen, dlclose,
+	dlsym, dlerror, dlfork -- new exports.
+	* dcrt0.cc: include dllinit.h, mark u pointer as NO_COPY.
+	(sanityAndSyncCheck): new, code moved from dll_crt0_1.
+	Initialize all linked dlls before calling main().
+	* dlfcn.cc: new file.
+	* dllinit.cc: new file.
+	* dllinit.h: new file.
+	* exceptions.cc: mark some variables with NO_COPY.
+	* fork.cc: include dllinit.h; declare cygwin.dll data/bss
+	start/end.
+	(cygwin_fork_helper1): copy data/bss of cygwin.dll itself to child
+	process (the code is disabled now); copy data areas of
+	linked/loaded dlls (if any); free loaded dll list on cleanup.
+	* include/cygwin32/cygwin_dll.h: new file.
+	* include/dlfcn.h: new file.
+	* libccrt0.cc (cygwin_crt0_common): new, code derived from
+	cygwin_crt0, MainFunc parameter added.
+	(cygwin_crt0): call cygwin_crt0_common.
+	(cygwin_attach_dll): new.
+	* shared.cc: mark some data as NO_COPY
+	* strace.cc: mark some data as NO_COPY
+	* winsup.h: add dll_dllcrt0 proto, NO_COPY macro.
+
+Sun Feb  8 17:51:26 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* getopt.c: new.  Import Berkeley getopt code modified for use
+	in Cygnus' kerberos implementation (including the writing of
+	getopt_long by Chris Provenzano (proven@cygnus.com)) then modified
+	a bit more to get it working in Cygwin32.  Although we were
+	going to remove getopt, it appears that too many programs would
+	need fixing to remove it completely.  Whether getopt should be
+	included in Cygwin32 should be decided at a later time.
+	* include/getopt.h: new.  Import Berkeley getopt.h.
+	* Makefile.in: add getopt.o to LIBCOS
+	* utils/Makefile.in: remove include of ../../include since
+	getopt.h is now in winsup/include, also revert recent change
+	of addition of GETOPT_OBJS.
+
+Fri Feb  6 16:28:19 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* cygwin.din: remove set_new_handler and cygwin_set_attributes
+	exports
+	* version.h: up major version number
+	* Makefile.in: rename dll to cygwinb19.dll
+	* syscalls.cc (cygwin_set_attributes): axe
+
+Thu Feb  5 18:28:37 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/Windows32/Functions.h: add protos for
+	DdeCmpStringHandles and DdeCreateDataHandle
+	* Makefile.in: stop including ../libiberty/getopt* since
+	we aren't exporting or using them
+	* utils/Makefile.in: add new variable for libiberty getopt objs
+	which is linked in for cygwin.exe
+
+Thu Feb  5 17:59:12 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	syscalls.cc: move ppc dll_entry asm code to...
+	dcrt0.cc: ...here
+
+	Import new globbing code from NetBSD 1.3
+	* glob: delete subdirectory
+	* glob.c: new file
+	* glob.h: new file
+	* Makefile.in: remove glob from submakes, remove glob/libglob.a
+	from DLL_IMPORTS, fix dcrt0 glob.h dependency
+	* configure.in: don't configure glob subdirectory
+	* configure: regenerate
+	* dcrt0.cc: include glob.h, not glob/glob.h.
+	(globify): don't call glob with GLOB_NOESCAPE which isn't a valid
+	flag with this glob
+
+Wed Feb  4 16:14:13 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	Allow system administrator to enter into the HKLM registry tree
+	a predefined mount table inherittable by all cygwin users.  The
+	predefined mounts are non-mandatory so the user's mount table has
+	a higher priority than the default one.  Cygwin reads HKLM tree
+	in read-only mode.
+	* path.cc (read_mounts): new, code derived from
+	mount_info::from_registry().
+	(mount_info::from_registry): call read_mounts from user's table,
+	then from system-wide mount table.
+	* registry.cc (reg_session::reg_session): key and access arguments
+	added.
+	(reg_key::init): access argument added.
+	(reg_key::reg_key): access argument added.
+	* registry.h (class reg_key): init prototype changed, default
+	argument of reg_key added.
+	(class reg_session): default arguments of constructor added.
+
+Wed Feb  4 15:38:59 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* include/a.out.h: new coff header file
+
+Wed Feb  4 01:55:18 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* uinfo.cc: define DEFAULT_UID/GID here
+	* winsup.h: removed DEFAULT_UID/GID defs and unused
+	set_console_title proto.  Did some major reorganizing,
+	and a little reformatting, commenting.
+
+Tue Feb  3 23:59:23 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* include/netdb.h: change to allow programs outside of cygwin
+	to set errno correctly.
+
+Tue Feb  3 23:59:23 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	Replace u->self and this_procinfo () with new `myself' pointer
+	wherever appropriate.  Also replace get_pid() calls with a
+	simple ->pid reference.
+
+Mon Feb  2 12:34:49 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from sos@prospect.com.ru (Sergey Okhapkin):
+	* console.cc (FakeReadFile): limit bytes to read to 30000 due to
+	Win NT 4.0 SP3 bug.  Kill foreground process group with SIGWINCH
+	on console buffer size change if tty support enabled.
+	* include/sys/termios.h: define more constants.
+	* tty.cc (fhandler_pty_master::ioctl): kill foreground process
+	group with SIGWINCH on window resizing.
+
+Mon Feb  2 12:14:49 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* dcrt0.cc (dll_crt0_1):  Initialize u->self here, early in a
+	forked process so the correct pid is used in strace output and so
+	signals do not end up being erroneously sent to the parent.
+	* exceptions.cc:  Make a global variable static.  Some minor
+	optimizations.
+	(call_handler): Make sure that the signal mask is restored when
+	sig_dispatch mutex is unavailable.
+	Reorder asm statements to prevent clobbering of flags register by
+	preceding ors or risk random inexplicable behavior when returning
+	from a signal handler.
+	* fork.cc (cygwin_fork_helper1): Put setjmp restore in child's
+	pinfo.  Have the child figure out its pid earlier in the
+	initialization process.  Don't print a "child failed" error if the
+	child failed during initialization due to a CTRL-C.  This is still
+	not quite right (see comment).
+	* sigproc.cc (sig_send): Remove unlock/lock_pinfo or suffer
+	consistent hangs in zsh.  Make {allow,block}_sig_dispatch globally
+	available.
+	(wait_sig): Fix problem where blocked signals would still be
+	processed if queued.  Add debugging SIGNOQUEUE conditional to turn
+	off signal queueing, making cygwin more like traditional UNIX.
+	* sigproc.h:  Add {allow,block}_sig_dispatch functions.
+
+Mon Jan 26 17:33:57 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* path.cc (mount_info::init): don't hardcode C: as the default
+	slash mount.  Instead, use the drive letter that the OS is loaded
+	on.
+
+Mon Jan 26 13:33:57 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* fork.cc (cygwin_fork_helper): Move setting PID_INITIALIZING
+	process_state here to avoid erroneously setting it permanently
+	via proc_register().
+	* pinfo.cc (pinfo_init): Delay notifying "parent" when execing
+	until this process is ready to receive signals or risk a race
+	condition if exec parent calls sigproc_terminate prior to
+	the child exec.
+	* sigproc.cc (proc_subproc): Don't set PID_INITIALIZING here.
+	It is too late in the process creation.
+	(sig_send): Reset sigsuspend mutex prior to use to avoid a race.
+	(wait_sig): Create sigsuspend mutex as an auto reset to attempt
+	to avoid a race condition.  Notify parent that this process is
+	ready if we were execed (code moved from pinfo_init).  Change
+	PulseEvents to SetEvents to avoid races
+	* spawn.cc (spawn_guts): Move setting PID_INITIALIZING
+	process_state here to help avoid race.
+
+Fri Jan 23 12:31:37 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* malloc.cc (malloc_critical_section): New static variable.
+	(malloc_init): New function.
+	(__malloc_lock, __malloc_unlock): New functions.
+	* winsup.h (malloc_init): Declare.
+	* heap.cc (heap_init): Call malloc_init.
+
+Thu Jan 22 18:46:40 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* tty.h (class tty): Change slave_handles to int.
+	* tty.cc (fhandler_tty_slave::open): Check for invalid tty
+	handles.  If this is the first slave, set slave_handles to 2;
+	otherwise, increment slave_handles.
+	(fhandler_tty_slave::close): Only close the tty handles if the
+	slave_handles field drops to 1.
+	(fhandler_tty_slave::write): Add a debugging message if WriteFile
+	fails.
+	(fhandler_tty_slave::dup): Set ttynum of new fhandler.  Increment
+	slave_handles if appropriate.
+	(fhandler_pty_master::close): Only close the tty handles if the
+	tty is no longer allocated.
+
+	* tty.h (class tty): Add handle_pid and slave_handles fields.
+	* tty.cc (attach_tty): Call connect_tty even if use_tty is not
+	set.
+	(detach_tty): Don't check use_tty.
+	(fhandler_tty_master::init): Initialize handle_pid and
+	slave_handles of tty.
+	(do_input): Treat \r as end of line character.
+	(do_output): Only set output_done_event if it is not NULL.
+	(fhandler_tty_slave::open): Don't worry if we can't open
+	output_done_event.  Check slave_handles field of tty to decide
+	from where to duplicate the handles.  Call detach_tty on error.
+	If we are now the owner of the slave handles, mark the tty
+	appropriately.
+	(fhandler_tty_slave::close): Only close output_done_event if it is
+	not NULL.  Check for errors from CloseHandle.  Close the tty
+	handles if we own them.
+	(fhandler_tty_slave::write): Only wait for output_done_event if it
+	is not NULL.
+	(fhandler_tty_slave::read): If nobody owns the tty, return EOF.
+	(fhandler_tty_slave::dup): Attach the tty.  Don't duplicate
+	output_done_event if it is NULL.  Detach the tty on error.
+	(fhandler_pty_master::open): Initialize handle_pid and
+	slave_handles of tty.  Don't create output_done_event.
+	(fhandler_pty_master::close): Only close output_done_event if it
+	is not NULL.  Check for errors from CloseHandle.  Only close the
+	tty handles if we own them.
+	(fhandler_pty_master::read): Only set output_done_event if it is
+	not NULL.
+	* hinfo.cc (de_linearize_fd_array): Don't set use_tty just because
+	we find a tty to delinearize.
+
+Wed Jan 21 21:58:27 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* sigproc.cc: Changes in wait_sig/sig_send semaphore/event
+	signaling to attempt to eliminate races.
+
+Tue Jan 20 16:11:05 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Remove last remnants of the mixed case handling support.
+	* path.cc (path_conv::path_conv): remove mixed_p init
+	(mount_info::from_registry): don't check for fmixed
+	(mount_info::to_registry): ditto
+	(mount_item::getmntent): when setting ret.mnt_opts, only consider
+	text vs binary flag
+	(mount_item::init): remove init of mixed
+	* path.h: remove mixed_p, mixed from path_conv class.  Remove
+	unmixedcaseify proto.
+	* include/sys/mount.h: comment out MOUNT_MIXED define, protect
+	header against multiple inclusion
+
+	A little header file cleanup.  Mostly to protect headers against
+	multiple inclusion.  Some aren't strictly speaking necessary but...
+	* include/sys/cygwin.h: protect header against multiple inclusion
+	* include/sys/smallprint.h: ditto, also add cplusplus wrapper
+	* include/sys/strace.h: comment last endif
+	* include/cygwin32/in.h: change _LINUX_IN_H protect defines
+	to _CYGWIN32_IN_H
+	* include/arpa/inet.h: protect header against multiple inclusion
+	* include/asm/types.h: ditto
+	* include/net/if.h: ditto
+	* include/netinet/ip.h: ditto
+	* include/netinet/ip_icmp.h: ditto
+	* include/netinet/in.h: ditto, remove commented out real header
+	file
+	* include/fcntl.h: protect header against multiple inclusion
+	* include/memory.h: ditto
+	* include/mntent.h: ditto
+	* include/strings.h: ditto
+	* include/syslog.h: ditto
+	* include/termio.h: ditto
+
+Tue Jan 20 12:51:59 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* strace.cc (strace_stderr): New static variable.
+	(strace_init): Set strace_stderr.
+ 	(system_printf): If not strace_stderr, use debug_printf to put the
+	message in a trace file.
+
+	* fhandler.h (fhandler_pty_master): Add neednl_ field.
+	* tty.h (RESTART_OUTPUT_EVENT): Change to be different from
+	IOCTL_DONE_EVENT.
+	* tty.cc (fhandler_tty_master::init): Initialize neednl_.
+	(do_output): Handle a length of one by using neednl_ to record an
+	expansion of \n to \r\n which doesn't fit.  Never expand \r to
+	\r\n.  Correct order of \r\n.
+	(fhandler_tty_slave::open): Improve error handling.  Use
+	DUPLICATE_CLOSE_SOURCE to close the pipes in the master process.
+	(fhandler_tty_slave::dup): Duplicate the handles, rather than
+	calling fhandler_tty_slave::open.
+	(fhandler_pty_master::open): Initialize neednl_.
+	(fhandler_pty_master::read): Return EOF for ERROR_BROKEN_PIPE,
+	rather than error.  Set errno correctly.
+	* hinfo.cc (digits): New static function.
+	(build_fhandler): Always accept /dev/ptmx and /dev/ttyDDD, even if
+	use_tty is not set.  use_tty now only controls the interpretation
+	of /dev/tty.
+
+Mon Jan 19 14:49:45 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* sigproc.cc (sig_send): lock_pinfo_for_update during this
+	function
+
+Fri Jan 16 18:09:59 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* sigproc.cc (sigproc_init): if we can't create a signal
+	thread or can't create sync_proc_subproc mutex, fail with
+	an api_fatal call rather than just returning
+
+Fri Jan 16 18:08:49 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	Changed signal handling to use one semaphore and one shared
+	memory array which is manipulated via Interlocked*() functions.
+	* exceptions.cc (lock_cs): Comment.  Report on error.
+	(unlock_cs): Add debugging statement.
+	(sig_dispatch_pending): Remove obsolete function.
+	(set_process_mask): Adapt to new signal method.
+	(call_handler): Clear wait()ing threads here while main thread is
+	suspended to avoid timing screwups.  Avoid calling the handler if
+	can't get dispatch mutex (code moved from sig_handle).  Return
+	status of acquiring the sig_dispatch mutex.
+	(sighandle): Adapt to new signal method.  Reorganize to *always*
+	honor sig_dispatch mutex or suffer deadlock on fatal signals when
+	someone else has the mutex and we're attempting to cleanup.
+	(events_init): Reflect change in cygname() arguments.
+	* fork.cc (stack_dummy): New function.  Returns address of
+	argument to determine bounds for eventual stack copy.
+	(cygwin_fork_helper1): Call subproc_init to start up subproc
+	thread if it is not alreay started.  Ensure that signals are
+	blocked while forked process is initializing.  Change method of
+	calculation for lower stack bounds to slightly more foolproof
+	method.  Preserve some global settings in forked process.
+	* misc.cc (cygname): Remove an unused argument.
+	* pinfo.cc (pinfo_list::allocate_pid): Add a useful debugging
+	statement.
+	* shared.cc (open_shared_file_map): Reflect change in cygname()
+	arguments.
+	* signal.cc (kill_pgrp): Avoid killing dead processes.  Don't
+	kill processes in my pgrp if not also in my ctty.
+	(sigaction): Adapt to new signal method.
+	(sigpending): Adapt to new signal method.
+	* sigproc.cc: Many changes to adapt to new signal method.  Also
+	delay waits for thread initialization until the thread needs to be
+	contacted.
+	* sigproc.h: Ditto.
+	* spawn.cc (spawn_guts): Fix potential off-by-one error(?) in
+	transcribing the argument list and add paranoid code to detect
+	future overruns.  Change priority to highest so that waiting
+	process will clear out quickly.
+	(_spawnve): Call subproc_init() to start up subproc thread if is
+	not already started.
+	* strace.cc (strace_printf): Increase size of internal buffer so
+	that long argument lists printed from spawn_guts do not overrun it
+	so easily.
+	* wait.cc (wait4): Set status flag to -1 prior to exit.  This will
+	cause previous wait that was interrupted by a signal which
+	dispatched to another wait to return the correct error value.
+	* winsup.h (pinfo): Add _sigtodo array for new signal method.
+	Remove obsolete field.  Reflect change in cygname arguments.
+
+Thu Jan 15 13:07:07 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* syscalls.cc (mkdir): Don't permit the directory to be created if
+	the parent directory is not writable.
+
+	* syscalls.cc (fchmod): Call chmod with the path name, rather than
+	just returning zero.
+
+	* syscalls.cc (writable_directory): New static function.
+	(_unlink): Don't permit the file to be removed if the directory is
+	not writable.
+	(rename): Don't permit the rename if either the source or
+	destination directory is not writable.
+
+	* syscalls.cc (chown): Set username and groupname lengths to UNLEN
+	+ 1, rather than 100.  If getpwuid fails, try to look up the real
+	user name to see if it is the same.  Don't report an error if
+	there is no security mapping.
+
+Wed Jan 14 14:46:00 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* Makefile.in: don't strip cygwin.dll by default
+	* winsup.h: minor reformatting, removed/reworded some comments
+
+Wed Jan 14 15:34:20 1998  Ian Lance Taylor  <ian@cygnus.com>
+
+	* syscalls.cc (setegid): New function which just returns ENOSYS.
+	(chroot): Likewise.
+	* cygwin.din: Export setegid, _setegid, chroot, and _chroot.
+
+	* syscalls.cc (setmode): Rename from _setmode.  Change to return
+	the old mode.  Remove old setmode function.
+	* cygwin.din: Make _setmode an alias for setmode.
+
+Mon Jan 12 13:53:03 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	Speed up cygwin pid calculation by staying in the range
+	1000 through (1000 + PSIZE - 1).
+	* pinfo.cc (pinfo_list::init): Change to reflect new pid
+	calculation method.
+	(pinfo_list::operator []): Ditto.
+	(pinfo_list::allocate_pid): Ditto.
+	* winsup.h (pinfo): Move pid and ppid into non-zeroed region since
+	they are always set by allocate_pid.
+	(pinfo_list): Change pid_base to next_pid_index to reflect new pid
+	calculation method.
+	(PBASE): New constant for new pid calcuation method.
+
+Sat Jan 10 12:06:38 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* syscalls.cc (process_deletion_queue): remove wrapper function
+	(close_all_files): call s->delqueue.process_queue instead of
+	going through wrapper.
+	* fhandler.cc (fhandler_base::close): call
+	s->delqueue.process_queue instead of using above wrapper.
+	* winsup.h: remove process_deletion_queue proto
+	* delqueue.h: up MAX_DELQUEUES_PENDING to 100 for now.  Rename
+	v to dqueue for clarity.
+	* delqueue.cc: v renamed to dqueue throughout.  Add FIXME
+	describing why this whole delqueue system needs rewriting.
+
+Fri Jan  9 13:18:44 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Remove some historical baggage:
+	* syscalls.cc (cygwin_set_attributes): remove commented-out code,
+	add FIXME since this function should go away next time an
+	incompatible change to cygwin.din is made.  Stop including
+	include/sys/cygwin.h.
+	* include/sys/cygwin.h: remove cygwin_set_attributes proto.
+	Remove CYGWIN_FMODE_ALL_BINARY define.
+	* hinfo (hinfo_vec::init_std_file_from_handle): remove old
+	commented-out code
+	* path.cc (unmixedcaseify): delete commented-out function
+	(mixedcaseify): ditto
+	* strerror.cc (strerror): delete commented-out code section
+
+Tue Jan  6 18:51:40 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	Conform to POSIX method for sending SIGHUP to stopped processes.
+	* dcrt0.cc (do_exit): Use new kill_pgrp function to kill orphaned
+	children on group leader exit iff the children are stopped (per
+	POSIX).
+	* signal.cc (kill_worker): Negative signal now means to send
+	a SIGCONT after the signal, to wake up the target process.
+	(_kill): Break out pgrp handling into separate function.
+	(kill_pgrp): New function pulled from _kill to send signals
+	to processes in a given pgrp.
+
+Tue Jan  6 14:37:43 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* fhandler.cc (fhandler_base::open): include
+	FILE_FLAG_BACKUP_SEMANTICS in file_attributes when file is
+	a directory.  Allows opening of directory as a file.  Allows
+	use of handle to perform some operations on both directories and
+	files.
+	(fhandler_base::fstat): Loop when attempting to get volume serial
+	number.  Works around an apparent Windows NT 3.51 bug.
+	* times.cc (utimes): use FILE_FLAG_BACKUP_SEMANTICS flag
+	to allow accessing directory times (may only work under NT;
+	until now it didn't work under either OS).
+	* winsup.h: Add O_DIROPEN constant.
+
+Mon Jan  5 19:18:01 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	* Makefile.in: make winsup.h depend on winsup.h in accordance
+	with below
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* {*.cc, *.h}: Remove include files already present in winsup.h.
+	Change empty function parameter	lists to (void) where appropriate.
+
+	* fork.cc: Clean up include files.  Minor change to CreateProcess
+	parameter list.
+	* signal.cc: Remove ifdef'ed stuff.
+	* smallprint.c: Add a necessary include file.
+	* winsup.h: Add a common include file.  Add a function declaration
+	for kill_pgrp.
+
+Mon Jan  5 18:30:37 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* path.cc (symlink_check_one): Detect a directory with the
+        SYSTEM attribute a little earlier to avoid an unnecessary check
+	for a symbolic link.
+
+Mon Jan  5 18:30:37 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	patch from cgf@bbc.com (Chris Faylor):
+	* console.cc (fhandler_console::write_normal): Fix off by one
+	error in bottom of scroll region.
+
+Mon Jan  5 18:30:37 1998  Geoffrey Noer  <noer@cygnus.com>
+
+	Fix spoofing of directory inodes.
+	* syscalls.cc (hash_path_name): instead of initializing the
+	hash to zero, take the value of the initial hash as a new
+	argument.
+	(_stat_worker): fix up hash_path_name reference in light of above
+	* dirsearch.cc (opendir): initialize dir->__d_dirhash to the
+	hash of the full directory name so readdir can make use of it.
+	(readdir): compute d_ino by combining the directory hash
+	calculated by opendir with the hash of the filename.
+	* fhandler.cc: fix up hash_path_name reference in light of above
+
+	* winsup.h: remove unnecessary protos for getkey, kbhit.  Adjust
+	hash_path_name proto.

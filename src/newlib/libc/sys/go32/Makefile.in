@@ -1,0 +1,227 @@
+# Makefile for newlib/libc/sys/go32.
+# Copyright (c) 1994 Cygnus Support.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are permitted
+# provided that the above copyright notice and this paragraph are
+# duplicated in all such forms and that any documentation,
+# advertising materials, and other materials related to such
+# distribution and use acknowledge that the software was developed
+# at Cygnus Support, Inc.  Cygnus Support, Inc. may not be used to
+# endorse or promote products derived from this software without
+# specific prior written permission.
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+srcdir = .
+
+SHELL = /bin/sh
+
+TOP = ../../..
+SRCTOP = ../../..
+TARGETDOC = ../../targetdep.tex
+
+OFILES=\
+_exit.o		\
+_main.o		\
+abort.o		\
+access.o		\
+bdos.o		\
+bdosptr.o		\
+brk.o		\
+chdir.o		\
+chmod.o		\
+chown.o		\
+clock.o		\
+close.o		\
+creat.o		\
+crlf2nl.o		\
+dir.o		\
+dosmem.o \
+dpmi.o          \
+dup.o		\
+dup2.o		\
+exec.o          \
+fchmod.o		\
+findfirs.o		\
+findnext.o		\
+fixpath.o		 \
+fstat.o		\
+fsync.o		\
+ftruncat.o		\
+gerrno.o		\
+getcwd.o		\
+getdate.o \
+getdtabl.o		\
+getgid.o		\
+getkey.o		\
+getpages.o		\
+getpid.o		\
+getrusag.o		\
+gettime.o \
+gettimeo.o		\
+getuid.o		\
+getwd.o		\
+go32func.o      \
+infoblk.o   \
+inportb.o		\
+inportl.o		\
+inportsb.o		\
+inportsl.o		\
+inportsw.o		\
+inportw.o		\
+int86x.o		\
+intdos.o		\
+intdosx.o		\
+isatty.o		\
+kbhit.o		\
+kill.o		\
+link.o		\
+longjmp.o		\
+lseek.o		\
+lstat.o		\
+mkdir.o		\
+open.o		\
+outportb.o		\
+outportl.o		\
+outportw.o		\
+outprtsb.o		\
+outprtsl.o		\
+outprtsw.o		\
+read.o		\
+readv.o		\
+rename.o		\
+rmdir.o		\
+sbrk.o		\
+screen.o		\
+setjmp.o		\
+setmode.o		\
+setstack.o \
+settimeo.o		\
+sleep.o		\
+stat.o		\
+stat_ast.o  	\
+syserr.o		\
+system.o		\
+tell.o		\
+time.o		\
+truncate.o		\
+turbo.o		\
+umask.o		\
+unlink.o		\
+utime.o		\
+utimes.o		\
+write.o		\
+writev.o
+
+#### Host, target, and site specific Makefile fragments come in here.
+###
+
+all: lib.a crt0.o
+lib.a: $(OFILES) $(COPYOFILES)
+	rm -f $@
+	$(AR) $(AR_FLAGS) $@ $(OFILES) $(COPYOFILES)
+
+clean mostlyclean:
+	$(RM) $(OFILES) $(COPYOFILES) crt0.o lib.a
+
+distclean maintainer-clean realclean: clean
+	rm -f Makefile config.status
+
+doc:
+
+Makefile: Makefile.in $(host_makefile_frag) $(target_makefile_frag)
+	$(SHELL) config.status
+
+
+# to support SunOS VPATH
+_exit.o: _exit.s
+_main.o: _main.c
+abort.o: abort.c
+access.o: access.c
+bdos.o: bdos.c
+bdosptr.o: bdosptr.c
+brk.o: brk.s
+chdir.o: chdir.s
+chmod.o: chmod.c
+chown.o: chown.c
+clock.o: clock.S
+close.o: close.s
+creat.o: creat.s
+crlf2nl.o: crlf2nl.c
+crt0.o: crt0.S
+crt0.o: crt0.s
+dir.o: dir.c
+dup.o: dup.s
+dup2.o: dup2.s
+execl.o: execl.c
+fchmod.o: fchmod.c
+findfirs.o: findfirs.s
+findnext.o: findnext.s
+fixpath.o: fixpath.c
+fstat.o: fstat.s
+fsync.o: fsync.s
+ftruncat.o: ftruncat.c
+gerrno.o: gerrno.s
+getcwd.o: getcwd.c
+getdate.o : getdate.c
+getdtabl.o: getdtabl.c
+getgid.o: getgid.c
+getkey.o: getkey.s
+getpages.o: getpages.c
+getpid.o: getpid.c
+getrusag.o: getrusag.c
+gettime.o : gettime.c
+gettimeo.o: gettimeo.c
+getuid.o: getuid.c
+getwd.o: getwd.s
+infoblk.o: infoblk.c
+inportb.o: inportb.s
+inportl.o: inportl.s
+inportsb.o: inportsb.s
+inportsl.o: inportsl.s
+inportsw.o: inportsw.s
+inportw.o: inportw.s
+int86x.o: int86x.s
+intdos.o: intdos.c
+intdosx.o: intdosx.c
+isatty.o: isatty.s
+kbhit.o: kbhit.s
+kill.o: kill.c
+link.o: link.s
+longjmp.o: longjmp.S
+lseek.o: lseek.s
+mkdir.o: mkdir.s
+open.o: open.s
+outportb.o: outportb.s
+outportl.o: outportl.s
+outportw.o: outportw.s
+outprtsb.o: outprtsb.s
+outprtsl.o: outprtsl.s
+outprtsw.o: outprtsw.s
+read.o: read.s
+readv.o: readv.c
+rename.o: rename.s
+rmdir.o: rmdir.s
+sbrk.o: sbrk.s
+screen.o: screen.S
+setjmp.o: setjmp.S
+setmode.o: setmode.s
+setstack.o: setstack.S
+settimeo.o: settimeo.s
+sleep.o: sleep.c
+stat.o: stat.c
+stat_ast.o: stat_ast.s
+syserr.o: syserr.c
+system.o: system.s
+tell.o: tell.s
+truncate.o: truncate.c
+turbo.o: turbo.s
+umask.o: umask.c
+unlink.o: unlink.s
+utime.o: utime.c
+utimes.o: utimes.c
+write.o: write.s
+writev.o: writev.c
+
