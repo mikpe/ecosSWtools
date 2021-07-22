@@ -216,7 +216,7 @@ char *fakes_option;
 
 /* Define this to change the optimizations performed by default.  */
 
-#define OPTIMIZATION_OPTIONS(LEVEL)	\
+#define OPTIMIZATION_OPTIONS(LEVEL, SIZE)	\
 {					\
   if ((LEVEL) >= 1)			\
     {					\
