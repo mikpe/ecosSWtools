@@ -3011,6 +3011,7 @@ int _exit_dummy_decl = 0;	/* prevent compiler & linker warnings */
 #endif /* L_exit */
 
 #ifdef L_eh
+#ifndef __D10V__
 
 #include "gthr.h"
 
@@ -3684,6 +3685,7 @@ label:
 }
 #endif /* DWARF2_UNWIND_INFO */
 
+#endif /* __D10V__ */
 #endif /* L_eh */
 
 
