@@ -220,6 +220,7 @@ enum pass {
   PASS_SECOND				/* with constructors linked in */
 };
 
+#define NO_SYS_SIGLIST
 #ifndef NO_SYS_SIGLIST
 #ifndef SYS_SIGLIST_DECLARED
 extern char *sys_siglist[];
