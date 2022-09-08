@@ -49,34 +49,10 @@ Use the same procedure as for z8k-coff, replacing `z8k-coff` with `d10v-elf`.
 
 ## Building a 32-bit gcc-2.95.3 compiler
 
-The problem here is that gcc-2.95.3 predates x86_64 support in GCC, so we must build it for 32-bit x86.
+gcc-2.95.3 predates x86-64 support in gcc, so it must be built for 32-bit x86.
 It also needs a private copy of binutils that defaults to 32-bit x86.
 
-1. Build 32-bit binutils from a separate build directory, any recent version should work (2.36.1 shown here):
-
-```
-  CFLAGS=-m32 /path/to/binutils-2.36.1/configure --build=i686-pc-linux-gnu --prefix=/opt/gcc-2.95.3/usr --disable-gold --disable-nls --disable-plugin
-  make MAKEINFO=/bin/true
-  make MAKEINFO=/bin/true install
-```
-
-2. Create a `gcc32` wrapper script:
-
-```
-  cat > /tmp/gcc32
-  #!/bin/sh
-  exec gcc -m32 -fgnu89-inline "$@"
-  ^D
-  chmod +x /tmp/gcc32
-```
-
-3. Build gcc-2.95.3 from a separate build directory, the bootstrap compiler can be any version up to gcc-11.1:
-
-```
-  CC=/tmp/gcc32 /path/to/gcc-2.95.3/configure --host=i686-pc-linux-gnu --prefix=/opt/gcc-2.95.3 --with-gnu-as --with-as=/opt/gcc-2.95.3/usr/bin/as --with-gnu-ld --with-ld=/opt/gcc-2.95.3/usr/bin/ld --disable-nls --disable-shared
-  make MAKEINFO=/bin/true LANGUAGES=c bootstrap
-  make MAKEINFO=/bin/true LANGUAGES=c install
-```
+Please see [build-gcc295](https://github.com/mikpe/build-gcc295) for build instructions.
 
 ## Copyright
 
@@ -84,7 +60,7 @@ For the copyright of ecosSWtools, see `COPYING` and `COPYING.LIB` in the `src` d
 
 This README and changes to ecosSWtools are
 
-    Copyright (C) 2021  Mikael Pettersson
+    Copyright (C) 2021-2022  Mikael Pettersson
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
